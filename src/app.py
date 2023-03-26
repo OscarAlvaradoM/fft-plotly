@@ -18,8 +18,11 @@ import pandas as pd
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+colors = {"text_color": "#D8D8D8",
+          "background_color_1": "#1E1E1E",
+          "background_color_2": "#323130"}
 
-# the style arguments for the sidebar. We use position:fixed and a fixed width
+# El estulo para el panel de la izquierda.
 SIDEBAR_STYLE = {
     "position": "fixed",
     "top": 0,
@@ -27,24 +30,19 @@ SIDEBAR_STYLE = {
     "bottom": 0,
     "width": "20rem",
     "padding": "2rem 1rem",
-    "background-color": "#f8f9fa",
+    "background-color": colors["background_color_1"]
 }
 
-# the styles for the main content position it to the right of the sidebar and
-# add some padding.
+# El estilo para el contenido principal, es decir, donde se encontrarán las gráficas.
 CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
+    "margin-left": "20rem",
+    "margin-right": "0rem",
     "padding": "2rem 1rem",
+    "background-color": colors["background_color_2"]
 }
 
-upload_object = dcc.Upload(
-        id='upload-data',
-        children=html.Div([
-            'Arrastra y suelta o ',
-            html.A('Selecciona archivos')
-        ]),
-        style={
+# El estilo para el botón de carga de archivos.
+UPLOAD_STYLE = {
             'width': '100%',
             'height': '60px',
             'lineHeight': '60px',
@@ -52,34 +50,39 @@ upload_object = dcc.Upload(
             'borderStyle': 'dashed',
             'borderRadius': '5px',
             'textAlign': 'center',
-            'margin': '10px'
-        },
+            'margin': '5px',
+            'color': colors["text_color"]
+        }
+
+upload_object = dcc.Upload(
+        id='upload-data',
+        children=html.Div(['Arrastra y suelta o ', html.A('Selecciona archivos')]),
+        style=UPLOAD_STYLE,
         # Vemos si podemos escoger múltiples archivos a la vez. Por el momento no queremos esto.
         multiple=False
     )
 
 sidebar = html.Div(
     [
-        html.H2("Ondas", className="display-4"),
-        html.Hr(),
-        html.P(
-            "Selecciona el archivo que quieras visualizar:", className="lead"
-        ),
+        html.H2("Ondas", className="display-4", style={"color":colors["text_color"]}),
+        html.Hr(style={"color":colors["text_color"]}),
+        html.P("Selecciona el archivo que quieras visualizar:", className="lead", style={"color":colors["text_color"]}),
         upload_object,
+        html.Br(),
         dbc.Nav(
             [
-                dbc.NavLink("Home", href="/", active="exact"),
-                dbc.NavLink("Page 1", href="/page-1", active="exact"),
-                dbc.NavLink("Page 2", href="/page-2", active="exact"),
+                dbc.NavLink("FFT", href="/", active="exact", style={"text-align":"center"}),
+                dbc.NavLink("Histograma", href="/page_1", active="exact", style={"text-align":"center"})
             ],
-            vertical=True,
+            vertical=False,
             pills=True,
+            justified=True
         ),
     ],
     style=SIDEBAR_STYLE,
 )
 
-#fig = 
+# Aquí está el contenido de la página principal, es decir, donde se encontrarán las gráficas.
 content = html.Div(id="output-data-upload", style=CONTENT_STYLE)
 
 # Aquí definimos la plantilla inicial. Habría que colocar todos los elementos que queremos de principio y serán los que se irán actualizando.
@@ -95,10 +98,7 @@ def parse_contents(content, filename):
     Queremos que esta función sólo genere el archivo y que otras funciones hagan cosas con este archivo.
     """
     content_string = content.split(',')[1]
-
     decoded = base64.b64decode(content_string)
-    print("Decoded: ", decoded)
-    print("io string: ", io.StringIO(decoded.decode('utf-8')))
     
     try:
         if 'csv' in filename or 'CSV' in filename:
@@ -108,12 +108,10 @@ def parse_contents(content, filename):
             # Si el usuario está escogiendo un archivo con extensión .xls
             file_str = io.BytesIO(decoded)
 
-        
-
         onda = utils.Onda(file_str)
         metadata = onda.metadata
         data = onda.data
-        print(data)
+
     except Exception as e:
         print(e)
         return html.Div([
@@ -123,21 +121,18 @@ def parse_contents(content, filename):
     fig = onda.plot_fourier()
 
     return html.Div([
-        html.H5(filename),
+        html.H5(f"Archivo seleccionado: {filename}", style={"color":colors["text_color"]}),
 
-       dcc.Graph(
-        id='onda_original',
-        figure=fig
-        ),
+       dcc.Graph(figure=fig, id='onda_original'),
     ])
 
 @app.callback(Output('output-data-upload', 'children'),
               Input('upload-data', 'contents'),
               State('upload-data', 'filename'))
 def update_output(contents, name):
-    children = parse_contents(contents, name)
-    return children
+    if contents:
+        children = parse_contents(contents, name)
+        return children
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-0
