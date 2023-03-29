@@ -6,9 +6,10 @@ import plotly.graph_objects as go
 import dash
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from dash import dcc, html, dash_table
+from dash import dcc, html
 
 import utils
+from styles import COLORS_STYLE, SIDEBAR_STYLE, CONTENT_STYLE, UPLOAD_STYLE, INITIAL_CONTENT_STYLE
 
 import pandas as pd
 
@@ -18,42 +19,7 @@ import pandas as pd
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-colors = {"text_color": "#D8D8D8",
-          "background_color_1": "#1E1E1E",
-          "background_color_2": "#323130"}
-
-# El estulo para el panel de la izquierda.
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "20rem",
-    "padding": "2rem 1rem",
-    "background-color": colors["background_color_1"]
-}
-
-# El estilo para el contenido principal, es decir, donde se encontrarán las gráficas.
-CONTENT_STYLE = {
-    "margin-left": "20rem",
-    "margin-right": "0rem",
-    "padding": "2rem 1rem",
-    "background-color": colors["background_color_2"]
-}
-
-# El estilo para el botón de carga de archivos.
-UPLOAD_STYLE = {
-            'width': '100%',
-            'height': '60px',
-            'lineHeight': '60px',
-            'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
-            'textAlign': 'center',
-            'margin': '5px',
-            'color': colors["text_color"]
-        }
-
+# -------------------------------- Objetos base------------------------------------------------------------------------------------
 upload_object = dcc.Upload(
         id='upload-data',
         children=html.Div(['Arrastra y suelta o ', html.A('Selecciona archivos')]),
@@ -64,29 +30,53 @@ upload_object = dcc.Upload(
 
 sidebar = html.Div(
     [
-        html.H2("Ondas", className="display-4", style={"color":colors["text_color"]}),
-        html.Hr(style={"color":colors["text_color"]}),
-        html.P("Selecciona el archivo que quieras visualizar:", className="lead", style={"color":colors["text_color"]}),
+        html.H2("Ondas", className="display-4", style={"color":COLORS_STYLE["text_color"]}),
+        html.Hr(style={"color":COLORS_STYLE["text_color"]}),
+        html.P("Selecciona el archivo que quieras visualizar:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
         upload_object,
         html.Br(),
         dbc.Nav(
             [
                 dbc.NavLink("FFT", href="/", active="exact", style={"text-align":"center"}),
-                dbc.NavLink("Histograma", href="/page_1", active="exact", style={"text-align":"center"})
+                dbc.NavLink("Espectrograma", href="/page_1", active="exact", style={"text-align":"center"})
             ],
             vertical=False,
             pills=True,
             justified=True
         ),
+        html.Br(),
+        html.Div([
+        html.P("Número de muestras:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
+        dcc.Input(placeholder='Ingresa un valor',type='number', value=None, id="numero-muestras")
+        ], style={"display":"None"}, id="muestras")
     ],
     style=SIDEBAR_STYLE,
 )
 
 # Aquí está el contenido de la página principal, es decir, donde se encontrarán las gráficas.
-content = html.Div(id="output-data-upload", style=CONTENT_STYLE)
+# content = html.Div(id="output-data-upload", style=CONTENT_STYLE)
+
+initial_content = html.Div([
+        html.H5("Seleccione un archivo en el panel de la izquierda.", style={"color":COLORS_STYLE["text_color"]}),
+        dcc.Graph(figure=utils.plot_content()[0], id='graficas'),
+    ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
+
+error_content = html.Div([
+        html.H5(f'Hubo un error procesando este archivo, por favor asegúrate que es un archivo de tipo .csv o .xls', style={"color":COLORS_STYLE["text_color"]}),
+        dcc.Graph(figure=utils.plot_content()[0], id='graficas'),
+    ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
 
 # Aquí definimos la plantilla inicial. Habría que colocar todos los elementos que queremos de principio y serán los que se irán actualizando.
-app.layout = html.Div([sidebar, content])
+app.layout = html.Div([sidebar, initial_content])
+
+# ---------------------------------------------------------- Funciones ------------------------------------------------------------------------
+def plot_valid_content(file_str, filename):
+    fig, numero_muestras = utils.plot_content(file_str)
+    children = html.Div([
+        html.H5(f"Archivo seleccionado: {filename}", style={"color":COLORS_STYLE["text_color"]}),
+       dcc.Graph(figure=fig, id='graficas'),
+    ])
+    return children, numero_muestras
 
 def parse_contents(content, filename):
     """
@@ -108,31 +98,36 @@ def parse_contents(content, filename):
             # Si el usuario está escogiendo un archivo con extensión .xls
             file_str = io.BytesIO(decoded)
 
-        onda = utils.Onda(file_str)
-        metadata = onda.metadata
-        data = onda.data
-
     except Exception as e:
         print(e)
-        return html.Div([
-            'Hubo un error procesando este archivo, por favor asegúrate que es un archivo de tipo .csv o .xls'
-        ])
+        return error_content
 
-    fig = onda.plot_fourier()
+    return plot_valid_content(file_str, filename)
 
-    return html.Div([
-        html.H5(f"Archivo seleccionado: {filename}", style={"color":colors["text_color"]}),
+def dev_vacio():
+    return initial_content
 
-       dcc.Graph(figure=fig, id='onda_original'),
-    ])
+# ------------------------------------------ Callbacks -----------------------------------------------------------------------
 
-@app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
+@app.callback(Output('output-data-upload', 'children'), # -> Es el componente que estoy editando desde acá
+              Output('muestras', 'style'),              # -> El estado de visibilidad del número de muestras
+              Output('numero-muestras', 'value'),              # -> El valor de las muestras
+              Input('upload-data', 'contents'),         # -> Archivo
               State('upload-data', 'filename'))
 def update_output(contents, name):
     if contents:
-        children = parse_contents(contents, name)
-        return children
+        children, numero_muestras = parse_contents(contents, name)
+        style = {'display': 'block'}
+    else:
+        children = dev_vacio()
+        style = {'display': 'none'}
+        numero_muestras = None
+    return children, style, numero_muestras
+
+#@app.callback(Output('grafica', 'children'), # -> Es el componente que estoy editando desde acá
+#              Input('numero-muestras', 'contents'),         # -> Archivo
+#              State('upload-data', 'filename'))
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
