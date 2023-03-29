@@ -1,6 +1,8 @@
 COLORS_STYLE = {"text_color": "#D8D8D8",
-          "background_color_1": "#1E1E1E",
-          "background_color_2": "#323130"}
+                "plot_color_1": "#F4D44D",
+                "plot_color_2": "#F45060",
+                "background_color_1": "#1E1E1E",
+                "background_color_2": "#323130"}
 
 # El estulo para el panel de la izquierda.
 SIDEBAR_STYLE = {
