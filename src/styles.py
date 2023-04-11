@@ -26,7 +26,7 @@ CONTENT_STYLE = {
 INITIAL_CONTENT_STYLE = {
     "margin-left": "10rem",
     "margin-right": "0rem",
-    "padding": "2rem 1rem",
+    "padding": "0.5rem 1rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }
 
