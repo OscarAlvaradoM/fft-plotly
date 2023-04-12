@@ -35,6 +35,7 @@ app.layout = html.Div([
 ])
 
 # ------------------------------------------ Callbacks -----------------------------------------------------------------------
+# Cuando se invocan datos medidos desde un CSV o un excel
 @app.callback(Output('output-data-upload', 'children'), # -> Es el componente que estoy editando desde acá
               Output('propiedades1', 'style'),              # -> El estado de visibilidad del número de muestras
               Input('upload-data', 'contents'),         # -> Archivo
@@ -56,6 +57,7 @@ def update_output(content, filename):
         
     return children, style
 
+# Cuando se selecciona una sección específica de la gráfica amarilla.
 @app.callback(
     Output('numero-muestras', 'children'),          # -> El valor del número muestras
     Output('frecuencia-muestreo', 'children'),      # -> El valor de la frecuencia de muestreo
@@ -100,6 +102,22 @@ def display_selected_data(relayoutData):
         fig_fourier_temporal = fig_fourier
         
     return number_samples, f_sample, resolucion_frecuencia, fig_fourier_temporal
+
+@app.callback(Output('output-simulation', 'children'),  # -> Las gráficas que mostraremos
+              Output('propiedades2', 'style'),          # -> El estado de visibilidad de las propiedades de la señal
+              Input('tipo-ondas', 'value'))             # -> El tipo de onda que se selecciona.
+def update_output_sim(tipo_onda):
+    if tipo_onda:
+        df_señal, df_fourier_señal, axes_señal, axes_fourier_señal = utils.create_signal_data(tipo_onda)
+        fig_señal, fig_fourier_señal = utils.get_fig(axes_señal, type="datos_medidos"), utils.get_fig(axes_fourier_señal, type="fourier")
+        children = utils.valid_signal_content(fig_señal, fig_fourier_señal, tipo_onda)
+        style = {'display': 'block'}
+        
+    else:
+        children = utils.initial_content_simulation()
+        style = {'display': 'None'}
+        
+    return children, style
 
 if __name__ == '__main__':
     app.run_server(debug=True)

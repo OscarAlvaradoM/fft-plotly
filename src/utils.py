@@ -1,11 +1,11 @@
 import base64
 import io
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+from scipy import signal
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from styles import COLORS_STYLE, INITIAL_CONTENT_STYLE, INITIAL_CONTENT_SIM_STYLE
 
@@ -17,7 +17,7 @@ def get_empty_fig(type="datos_medidos"):
     fig.add_trace(axes)
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
-    h = 300
+    h = 280
     top_margin = 30
 
     if type == "datos_medidos":
@@ -26,7 +26,7 @@ def get_empty_fig(type="datos_medidos"):
             rangeslider=dict(visible=True)
             )
         )
-        h = 330
+        h = 310
         top_margin = 20
     
     fig.update_layout(height=h, width=1100, 
@@ -115,6 +115,14 @@ def get_axes(df, type="datos_medidos"):
 
     return axes
 
+def get_axes_sim(df, type="datos_simulados"):
+    if type == "datos_simulados":
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Simulación", marker=dict(color = COLORS_STYLE["plot_color_1"]))
+    else:
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
+
+    return axes
+
 def parse_contents(content, filename):
     """
     Esta función nos sirve para leer el contenido que estamos seleccionando. Se utiliza en el @callback. 
@@ -137,7 +145,7 @@ def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
     fig.add_trace(axes)
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
-    h = 300
+    h = 280
     top_margin = 30
     
     if type == "datos_medidos":
@@ -146,7 +154,7 @@ def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
             rangeslider=dict(visible=True)
             )
         )
-        h = 330
+        h = 310
         top_margin = 20
     
     fig.update_layout(height=h, width=1100, 
@@ -178,4 +186,44 @@ def get_frequency_resolution(df):
     frequency_resolution = f"{frequency_resolution:1.5} Hz"
 
     return frequency_resolution
+
+# ------------------ Acá vienen las funciones de las señales simuladas ---------------------
+def get_dfs_signal(signal_type="Sinusoidal", amplitud=1, frecuencia=500, N=3_000, tiempo_muestra=60):
+    if tiempo_muestra % 2 == 0:
+        tiempo_muestra = tiempo_muestra + 1
+    t = np.linspace(-(tiempo_muestra-1)/2, (tiempo_muestra-1)/2, N)
+    w = 2*np.pi*frecuencia
+    A = amplitud
+
+    if signal_type == "Sinusoidal":
+        y = A*np.sin(w*t)
+
+    elif signal_type == 'Cuadrada':
+        y = A*signal.square(w* t, duty=(np.sin(w*t) + 1)/2)
+
+    elif signal_type == 'Triangular':
+        y = A*signal.sawtooth(w*t,0.5)
+
+    elif signal_type == 'Sierra':
+        y = A*signal.sawtooth(w*t)
+
+    df_signal = pd.DataFrame({"tiempo":t, "señal":y})
+    df_fourier = get_fft(df_signal)
+
+    return df_signal, df_fourier
+
+def create_signal_data(signal_type="Sinusoidal"):
+    df_signal, df_fourier_signal = get_dfs_signal(signal_type)
+    axes_signal, axes_fourier_signal = get_axes_sim(df_signal), get_axes_sim(df_fourier_signal, type="fourier")
+    
+    return df_signal, df_fourier_signal, axes_signal, axes_fourier_signal
+
+def valid_signal_content(fig1, fig2, signal_type):
+    div = html.Div([
+        html.H5(f"Tipo de onda: {signal_type}", style={"color":COLORS_STYLE["text_color"]}),
+        dcc.Graph(figure=fig1, id='grafica-signal'),
+        dcc.Graph(figure=fig2, id='grafica-signal-fourier'),
+    ])
+    return div
+
 

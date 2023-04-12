@@ -46,7 +46,7 @@ sidebar2 = html.Div(
         html.H2("Señales", className="display-4", style={"color":COLORS_STYLE["text_color"]}),
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
         html.P("Selecciona la función que quieras simular:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Dropdown(['Sinusoidal', 'Cuadrada', 'Triangular', 'Sierra']),
+        dcc.Dropdown(['Sinusoidal', 'Cuadrada', 'Triangular', 'Sierra'], id="tipo-ondas", placeholder="Selecciona un tipo de onda"),
         html.Br(),
         dbc.Nav(
             [

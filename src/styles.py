@@ -41,7 +41,7 @@ INITIAL_CONTENT_STYLE = {
 INITIAL_CONTENT_SIM_STYLE = {
     "margin-left": "10rem",
     "margin-right": "0rem",
-    "padding": "3rem 12rem",
+    "padding": "1.5rem 1rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }
 
