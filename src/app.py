@@ -6,7 +6,8 @@ from dash.dependencies import Input, Output, State
 from dash import dcc, html
 
 import utils
-from styles import COLORS_STYLE, SIDEBAR_STYLE, CONTENT_STYLE, UPLOAD_STYLE, INITIAL_CONTENT_STYLE
+from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE
+from components import sidebar, sidebar2
 
 f_sample = None
 number_samples = None
@@ -19,50 +20,23 @@ fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# -------------------------------- Objetos base------------------------------------------------------------------------------------
-upload_object = dcc.Upload(
-        id='upload-data',
-        children=html.Div(['Arrastra y suelta o ', html.A('Selecciona archivos')]),
-        style=UPLOAD_STYLE,
-        # Vemos si podemos escoger múltiples archivos a la vez. Por el momento no queremos esto.
-        multiple=False
-    )
-
-sidebar = html.Div(
-    [
-        html.H2("Ondas", className="display-4", style={"color":COLORS_STYLE["text_color"]}),
-        html.Hr(style={"color":COLORS_STYLE["text_color"]}),
-        html.P("Selecciona el archivo que quieras visualizar:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        upload_object,
-        html.Br(),
-        dbc.Nav(
-            [
-                dbc.NavLink("FFT", href="/", active="exact", style={"text-align":"center"}),
-                dbc.NavLink("Espectrograma", href="/page_1", active="exact", style={"text-align":"center"})
-            ],
-            vertical=False,
-            pills=True,
-            justified=True
-        ),
-        html.Hr(style={"color":COLORS_STYLE["text_color"]}),
-        html.Div([
-        html.P("Número de muestras:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='numero-muestras', style={"color":COLORS_STYLE["plot_color_1"]}),
-        html.P("Frecuencia de muestreo:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='frecuencia-muestreo', style={"color":COLORS_STYLE["plot_color_1"]}),
-        html.P("Resolución en frecuencia:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='resolucion-frecuencia', style={"color":COLORS_STYLE["plot_color_2"]})
-        ], style={"display":"None"}, id="propiedades")
-    ],
-    style=SIDEBAR_STYLE,
-)
-
 # Aquí definimos la plantilla inicial. Habría que colocar todos los elementos que queremos de principio y serán los que se irán actualizando.
-app.layout = html.Div([sidebar, utils.initial_content()])
+app.layout = html.Div([
+    dcc.Tabs([
+        dcc.Tab(label='Lectura de datos', children=
+        [
+                sidebar, utils.initial_content_data()
+        ], style=TAB_STYLE, selected_style=SELECTED_STYLE),
+        dcc.Tab(label='Simulación de datos', children=
+        [
+            sidebar2, utils.initial_content_simulation()
+        ], style=TAB_STYLE, selected_style=SELECTED_STYLE)
+    ], style=TABS_STYLE)
+])
 
 # ------------------------------------------ Callbacks -----------------------------------------------------------------------
 @app.callback(Output('output-data-upload', 'children'), # -> Es el componente que estoy editando desde acá
-              Output('propiedades', 'style'),              # -> El estado de visibilidad del número de muestras
+              Output('propiedades1', 'style'),              # -> El estado de visibilidad del número de muestras
               Input('upload-data', 'contents'),         # -> Archivo
               State('upload-data', 'filename'))         # -> Nombre del archivo
 def update_output(content, filename):
@@ -77,7 +51,7 @@ def update_output(content, filename):
         resolucion_frecuencia = utils.get_frequency_resolution(df_fourier)
 
     else:
-        children = utils.initial_content()
+        children = utils.initial_content_data()
         style = {'display': 'None'}
         
     return children, style

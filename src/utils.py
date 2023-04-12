@@ -7,117 +7,9 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from styles import COLORS_STYLE, SIDEBAR_STYLE, CONTENT_STYLE, UPLOAD_STYLE, INITIAL_CONTENT_STYLE
+from styles import COLORS_STYLE, INITIAL_CONTENT_STYLE, INITIAL_CONTENT_SIM_STYLE
 
 from dash import dcc, html
-
-#colors = {"plot_color_1": "#F4D44D",
-#          "plot_color_2": "#F45060"}
-
-# class Onda():
-#     def __init__(self, file):
-#         """
-#         Constructor del objeto Onda, que alberga datos de un documento de mediciones de osciloscopio. Separa entre datos y metadatos."""
-#         raw_file = pd.read_csv(file)
-#         self.metadata = raw_file.iloc[:13,:]
-#         self.data = raw_file.iloc[14:,:]
-#         self.data = self.data.astype(float)
-#         self.f_sample = 1/(self.data.iloc[1,0] - self.data.iloc[0,0])
-            
-#     def plot_fourier(self, numero_de_muestras=None):
-#         """
-#         Función que grafica tanto los datos medidos como la transformada de Fourier de dichos datos.
-#         """
-#         data = self.data
-#         f_sample = self.f_sample
-        
-#         fig = make_subplots(rows=2, cols=1)
-
-#         fig.add_trace(go.Scatter(x=data.iloc[:,0], y=data.iloc[:,1], name = "Medición", marker=dict(color = colors["plot_color_1"])),row=1, col=1)
-#         fig.update_xaxes(showgrid=False)
-#         fig.update_yaxes(showgrid=False)
-
-#         ffty = np.fft.fft(data.iloc[:,1])
-
-#         N = len(data)
-#         f_interval = f_sample / N
-#         hertz = np.arange(N)*f_interval
-#         hertz = hertz - np.ceil(max(hertz)/2)
-#         specs = np.fft.fftshift(20*np.log10(ffty))
-#         specs = [np.linalg.norm(spec) for spec in specs]
-#         fig.add_trace(go.Scatter(x=hertz, y=specs, name = "Fourier", marker=dict(color = colors["plot_color_2"])), row=2, col=1)
-
-#         fig.update_layout(height=600, width=1100, 
-#                           title_text=f"Frecuencia de muestreo: {f_sample:1.5} hz",
-#                           plot_bgcolor='rgba(0, 0, 0, 0)',
-#                           paper_bgcolor='rgba(0, 0, 0, 0)',
-#                           font_color='#8E8F91')
-
-#         fig.update_layout(legend=dict(
-#         orientation="h",
-#         yanchor="bottom",
-#         y=0.46,
-#         xanchor="right",
-#         x=1),
-#         margin=dict(l=0, r=0, t=30, b=0))
-
-#         fig.update_xaxes(showgrid=False)
-#         fig.update_yaxes(showgrid=False)
-
-#         return fig, N
-
-# def plot_content(file_str=None, numero_muestras=None):
-#     if file_str == None:
-#         fig, numero_muestras = plot_empty()
-#     else:
-#         onda = Onda(file_str)
-#         fig, numero_muestras = onda.plot_fourier(numero_muestras)
-#     return fig, numero_muestras
-
-# def get_empty_axes():
-#     axes_1 = go.Scatter(x=[], y=[], name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]))
-#     axes_2 = go.Scatter(x=[], y=[], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
-
-#     return axes_1, axes_2
-
-# def get_dfs_slider(df_slider):
-
-#     df_fourier = get_fft(df_slider)
-
-#     return df_slider, df_fourier
-
-# def parse_contents_slider(another_df):
-#     """
-#     Esta función nos sirve para leer el contenido que estamos seleccionando. Se utiliza en el @callback. 
-#     Con esta función también estamos decidiendo qué hacemos con el archivo que abrimos. 
-    
-    
-#     Por el momento se abre la tabla en la página. Para nada queremos esto. 
-#     Queremos que esta función sólo genere el archivo y que otras funciones hagan cosas con este archivo.
-#     """
-#     df_datos_medidos, df_fourier = get_dfs_slider(another_df)
-#     axes_1, axes_2 = get_axes(df_datos_medidos, df_fourier)
-    
-#     return df_datos_medidos, df_fourier, axes_1, axes_2
-
-# def parse_contents_fft(df_mostrar, df_fft):
-#     """
-#     Esta función nos sirve para leer el contenido que estamos seleccionando. Se utiliza en el @callback. 
-#     Con esta función también estamos decidiendo qué hacemos con el archivo que abrimos. 
-    
-    
-#     Por el momento se abre la tabla en la página. Para nada queremos esto. 
-#     Queremos que esta función sólo genere el archivo y que otras funciones hagan cosas con este archivo.
-#     """
-#     axes_1, axes_2 = get_axes(df_mostrar, df_fft)
-    
-#     return df_mostrar, df_fft, axes_1, axes_2
-
-# def change_number_samples(df_1, df_2, number_samples):
-#     df_1 = df_1.iloc[:number_samples,:]
-#     df_2 = get_fft(df_1)
-
-#     return df_1, df_2
 
 def get_empty_fig(type="datos_medidos"):
     axes = go.Scatter(x=[], y=[], name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]))
@@ -125,7 +17,7 @@ def get_empty_fig(type="datos_medidos"):
     fig.add_trace(axes)
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
-    h = 320
+    h = 300
     top_margin = 30
 
     if type == "datos_medidos":
@@ -134,7 +26,7 @@ def get_empty_fig(type="datos_medidos"):
             rangeslider=dict(visible=True)
             )
         )
-        h = 350
+        h = 330
         top_margin = 20
     
     fig.update_layout(height=h, width=1100, 
@@ -146,13 +38,23 @@ def get_empty_fig(type="datos_medidos"):
 
     return fig
 
-def initial_content():
+def initial_content_data():
     fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
     div = html.Div([
         html.H5("Seleccione un archivo en el panel de la izquierda.", style={"color":COLORS_STYLE["text_color"]}),
         dcc.Graph(figure=fig1, id='grafica-medidos'),
         dcc.Graph(figure=fig2, id='grafica-fourier'),
     ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
+
+    return div
+
+def initial_content_simulation():
+    fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
+    div = html.Div([
+        html.H5("Seleccione en el panel de la izquierda la señal que desea simular.", style={"color":COLORS_STYLE["text_color"]}),
+        dcc.Graph(figure=fig1, id='grafica-señal'),
+        dcc.Graph(figure=fig2, id='grafica-fourier-señal'),
+    ], id="output-simulation", style=INITIAL_CONTENT_SIM_STYLE)
 
     return div
 
@@ -235,7 +137,7 @@ def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
     fig.add_trace(axes)
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(showgrid=False)
-    h = 320
+    h = 300
     top_margin = 30
     
     if type == "datos_medidos":
@@ -244,7 +146,7 @@ def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
             rangeslider=dict(visible=True)
             )
         )
-        h = 350
+        h = 330
         top_margin = 20
     
     fig.update_layout(height=h, width=1100, 
