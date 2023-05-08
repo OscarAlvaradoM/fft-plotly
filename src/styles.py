@@ -91,3 +91,22 @@ SELECTED_STYLE = {
     'height': '42px',
     'color' : '#D8D8D8',
 }
+
+BUTTON_STYLE = {
+    'width': '100%',
+    'height': '60px',
+    'width': '240px', 
+    'height': '40px', 
+    'cursor': 'pointer', 
+    'border': '0px', 
+    'border-radius': '5px', 
+    'borderBottom': '2px #004A96 solid',
+    'borderTop': '2px #004A96 solid',
+    'borderLeft': '2px #004A96 solid',
+    'borderRight': '2px #004A96 solid',
+    'background-color': '#000000', 
+    'color': 'white', 
+    'text-transform': 'uppercase', 
+    'font-size': '15px',
+    'hover': {'background-color': '#555555'}
+}

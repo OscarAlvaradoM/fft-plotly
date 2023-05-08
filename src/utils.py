@@ -49,11 +49,11 @@ def initial_content_data():
     return div
 
 def initial_content_simulation():
-    fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
+    #fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
     div = html.Div([
         html.H5("Seleccione en el panel de la izquierda la señal que desea simular.", style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Graph(figure=fig1, id='grafica-señal'),
-        dcc.Graph(figure=fig2, id='grafica-fourier-señal'),
+        #dcc.Graph(figure=fig1, id='grafica-señal'),
+        #dcc.Graph(figure=fig2, id='grafica-fourier-señal'),
     ], id="output-simulation", style=INITIAL_CONTENT_SIM_STYLE)
 
     return div

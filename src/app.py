@@ -4,9 +4,10 @@ import dash
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash import dcc, html
+from dash.exceptions import PreventUpdate
 
 import utils
-from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE
+from styles import COLORS_STYLE, TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_SIM_STYLE
 from components import sidebar, sidebar2
 
 f_sample = None
@@ -103,21 +104,72 @@ def display_selected_data(relayoutData):
         
     return number_samples, f_sample, resolucion_frecuencia, fig_fourier_temporal
 
-@app.callback(Output('output-simulation', 'children'),  # -> Las gráficas que mostraremos
-              Output('propiedades2', 'style'),          # -> El estado de visibilidad de las propiedades de la señal
-              Input('tipo-ondas', 'value'))             # -> El tipo de onda que se selecciona.
-def update_output_sim(tipo_onda):
-    if tipo_onda:
-        df_señal, df_fourier_señal, axes_señal, axes_fourier_señal = utils.create_signal_data(tipo_onda)
-        fig_señal, fig_fourier_señal = utils.get_fig(axes_señal, type="datos_medidos"), utils.get_fig(axes_fourier_señal, type="fourier")
-        children = utils.valid_signal_content(fig_señal, fig_fourier_señal, tipo_onda)
-        style = {'display': 'block'}
+# Para agregar señales simuladas
+@app.callback(
+    # Abrimos o cerramos la ventana emergente
+    Output("modal-centered", "is_open"),
+    # Reiniciamos nuestros botones
+    Output("button-add-signal", "n_clicks"),
+    Output("ok-button", "n_clicks"),
+    Output("cancel-button", "n_clicks"),
+    # Reiniciamos lso valores a guardar
+    Output("tipo-onda", "value"),
+    Output("numero-periodos", "value"),
+    Output("amplitud", "value"),
+    Output("resolucion", "value"),
+    # Aquí los valores de entrada de los botones
+    Input("button-add-signal", "n_clicks"),
+    Input("ok-button", "n_clicks"),
+    Input("cancel-button", "n_clicks"),
+    # Aquí los valores de la nueva onda a agregar
+    Input("tipo-onda", "value"),
+    Input("numero-periodos", "value"),
+    Input("amplitud", "value"),
+    Input("resolucion", "value"),
+    # Estado de la ventana emergente
+    State("modal-centered", "is_open"),
+)
+def open_modal(add_button, ok_button, cancel_button,
+               tipo_onda, numero_periodos, amplitud, resolucion, is_open):
+    
+    ventana_visible = False
+
+
+    # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
+    if is_open:
+        if cancel_button:
+            print("Cancelo")
+            cancel_button = None
+            ventana_visible = False
+
+        elif ok_button:
+            print("Ok")
+            ok_button = None
+            if tipo_onda == None or numero_periodos == None or amplitud == None or resolucion == None:
+                print("Te falta llenar algunos campos") 
+                ventana_visible = True
+                raise PreventUpdate
+            else:
+                ventana_visible = False
+                print("Guardamos los datos")
+                print("Tipo de onda: ", tipo_onda)
+                print("Número de periodos: ", numero_periodos)
+                print("Amplitud: ", amplitud)
+                print("Resolución: ", resolucion)
         
+        else:
+            ventana_visible = True
+            raise PreventUpdate
+
+    # Si está cerrada, sólo puedo abrirla.
     else:
-        children = utils.initial_content_simulation()
-        style = {'display': 'None'}
-        
-    return children, style
+        if add_button:
+            print("Abro la ventana")
+            add_button = None
+            ventana_visible = True
+        else:
+            raise PreventUpdate
+    return ventana_visible, add_button, ok_button, cancel_button, None, None, None, None
 
 if __name__ == '__main__':
     app.run_server(debug=True)
