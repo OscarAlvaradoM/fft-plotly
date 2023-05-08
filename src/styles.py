@@ -7,12 +7,6 @@ COLORS_STYLE = {"text_color": "#D8D8D8",
 
 # El estilo para el panel de la izquierda.
 SIDEBAR_STYLE = {
-    # "position": "fixed",
-    # "top": "42px",
-    # "bottom": 0,
-    # "width": "20rem",
-    # "padding": "2rem 1rem",
-
     "padding": "2rem 1rem",
     "position": "fixed",
     "top": "42px",
@@ -39,11 +33,21 @@ INITIAL_CONTENT_STYLE = {
 }
 
 INITIAL_CONTENT_SIM_STYLE = {
-    "margin-left": "10rem",
+    "margin-left": "20rem",
     "margin-right": "0rem",
-    "padding": "1.5rem 1rem",
+    "margin-top": "1.5rem",
+    "padding": "1.5rem 2rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }
+
+CENTERED_CONTENT_STYLE = {
+    "color":COLORS_STYLE["text_color"],
+    "min-height":"600px",
+    'height': '100%',
+    'textAlign': 'center',
+    "padding": "300px 0",
+    "background-color": COLORS_STYLE["background_color_2"]
+    }
 
 # El estilo para el botón de carga de archivos.
 UPLOAD_STYLE = {
@@ -109,4 +113,11 @@ BUTTON_STYLE = {
     'text-transform': 'uppercase', 
     'font-size': '15px',
     'hover': {'background-color': '#555555'}
+}
+
+SIGNALS_STYLE = {
+    "margin-left": "-22rem",
+    "margin-top": "-2rem",
+    "padding": "0rem 0rem",
+    "background-color": COLORS_STYLE["background_color_2"]
 }

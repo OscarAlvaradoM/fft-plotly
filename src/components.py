@@ -55,7 +55,7 @@ modal = dbc.Modal(
                         dcc.Dropdown(['Sinusoidal', 'Cuadrada', 'Triangular', 'Sierra'], id="tipo-onda", placeholder="Selecciona un tipo de onda", value=None),
                         dbc.Label("Número de periodos:"),
                         dbc.Input(id="numero-periodos", type="number", placeholder="Ingresa número de periodos", min=1, value=None),
-                        dbc.Label("Amplitud [V]:"),
+                        dbc.Label("Amplitud pico  a pico [V]:"),
                         dbc.Input(id="amplitud", type="number", placeholder="Ingresa la amplitud de la señal", min=1, value=None),
                         dbc.Label("Resolución:"),
                         dbc.Input(id="resolucion", type="number", placeholder="Ingresa la resolución", min=1, value=None),
@@ -78,18 +78,6 @@ sidebar2 = html.Div(
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
         button,
         modal,
-        # html.P("Selecciona la función que quieras simular:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        # dcc.Dropdown(['Sinusoidal', 'Cuadrada', 'Triangular', 'Sierra'], id="tipo-ondas", placeholder="Selecciona un tipo de onda"),
-        # html.Br(),
-        # dbc.Nav(
-        #     [
-        #         dbc.NavLink("FFT", href="/", active="exact", style={"text-align":"center"}),
-        #         dbc.NavLink("Espectrograma", href="/page_1", active="exact", style={"text-align":"center"})
-        #     ],
-        #     vertical=False,
-        #     pills=True,
-        #     justified=True
-        # ),
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
         html.Div([
         html.P("Número de muestras:", className="lead", style={"color":COLORS_STYLE["text_color"]}),

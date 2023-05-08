@@ -3,11 +3,10 @@ import io
 
 import numpy as np
 import pandas as pd
-from scipy import signal
 
 import plotly.graph_objects as go
 
-from styles import COLORS_STYLE, INITIAL_CONTENT_STYLE, INITIAL_CONTENT_SIM_STYLE
+from styles import COLORS_STYLE, INITIAL_CONTENT_STYLE
 
 from dash import dcc, html
 
@@ -45,16 +44,6 @@ def initial_content_data():
         dcc.Graph(figure=fig1, id='grafica-medidos'),
         dcc.Graph(figure=fig2, id='grafica-fourier'),
     ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
-
-    return div
-
-def initial_content_simulation():
-    #fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
-    div = html.Div([
-        html.H5("Seleccione en el panel de la izquierda la señal que desea simular.", style={"color":COLORS_STYLE["text_color"]}),
-        #dcc.Graph(figure=fig1, id='grafica-señal'),
-        #dcc.Graph(figure=fig2, id='grafica-fourier-señal'),
-    ], id="output-simulation", style=INITIAL_CONTENT_SIM_STYLE)
 
     return div
 
@@ -110,14 +99,6 @@ def get_dfs(content, filename):
 def get_axes(df, type="datos_medidos"):
     if type == "datos_medidos":
         axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]))
-    else:
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
-
-    return axes
-
-def get_axes_sim(df, type="datos_simulados"):
-    if type == "datos_simulados":
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Simulación", marker=dict(color = COLORS_STYLE["plot_color_1"]))
     else:
         axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
 
@@ -186,44 +167,3 @@ def get_frequency_resolution(df):
     frequency_resolution = f"{frequency_resolution:1.5} Hz"
 
     return frequency_resolution
-
-# ------------------ Acá vienen las funciones de las señales simuladas ---------------------
-def get_dfs_signal(signal_type="Sinusoidal", amplitud=1, frecuencia=500, N=3_000, tiempo_muestra=60):
-    if tiempo_muestra % 2 == 0:
-        tiempo_muestra = tiempo_muestra + 1
-    t = np.linspace(-(tiempo_muestra-1)/2, (tiempo_muestra-1)/2, N)
-    w = 2*np.pi*frecuencia
-    A = amplitud
-
-    if signal_type == "Sinusoidal":
-        y = A*np.sin(w*t)
-
-    elif signal_type == 'Cuadrada':
-        y = A*signal.square(w* t, duty=(np.sin(w*t) + 1)/2)
-
-    elif signal_type == 'Triangular':
-        y = A*signal.sawtooth(w*t,0.5)
-
-    elif signal_type == 'Sierra':
-        y = A*signal.sawtooth(w*t)
-
-    df_signal = pd.DataFrame({"tiempo":t, "señal":y})
-    df_fourier = get_fft(df_signal)
-
-    return df_signal, df_fourier
-
-def create_signal_data(signal_type="Sinusoidal"):
-    df_signal, df_fourier_signal = get_dfs_signal(signal_type)
-    axes_signal, axes_fourier_signal = get_axes_sim(df_signal), get_axes_sim(df_fourier_signal, type="fourier")
-    
-    return df_signal, df_fourier_signal, axes_signal, axes_fourier_signal
-
-def valid_signal_content(fig1, fig2, signal_type):
-    div = html.Div([
-        html.H5(f"Tipo de onda: {signal_type}", style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Graph(figure=fig1, id='grafica-signal'),
-        dcc.Graph(figure=fig2, id='grafica-signal-fourier'),
-    ])
-    return div
-
-

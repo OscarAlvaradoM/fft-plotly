@@ -1,4 +1,4 @@
-import plotly.graph_objects as go
+import pandas as pd
 
 import dash
 import dash_bootstrap_components as dbc
@@ -7,7 +7,8 @@ from dash import dcc, html
 from dash.exceptions import PreventUpdate
 
 import utils
-from styles import COLORS_STYLE, TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_SIM_STYLE
+import utils2
+from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE
 from components import sidebar, sidebar2
 
 f_sample = None
@@ -16,6 +17,8 @@ resolucion_frecuencia = None
 datos_medidos_a_mostrar = None
 df_datos_medidos, df_fourier = None, None
 fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
+
+df_simulations = None
 
 # Con esto inicializamos la aplicación
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -27,11 +30,14 @@ app.layout = html.Div([
         dcc.Tab(label='Lectura de datos', children=
         [
                 sidebar, utils.initial_content_data()
-        ], style=TAB_STYLE, selected_style=SELECTED_STYLE),
+        ], 
+        style=TAB_STYLE, selected_style=SELECTED_STYLE),
+
         dcc.Tab(label='Simulación de datos', children=
         [
-            sidebar2, utils.initial_content_simulation()
-        ], style=TAB_STYLE, selected_style=SELECTED_STYLE)
+            sidebar2, utils2.initial_content_simulation()
+        ], 
+        style=TAB_STYLE, selected_style=SELECTED_STYLE)
     ], style=TABS_STYLE)
 ])
 
@@ -106,6 +112,8 @@ def display_selected_data(relayoutData):
 
 # Para agregar señales simuladas
 @app.callback(
+    # Para mostrar las simulaciones
+    Output("output-simulation", "children"),
     # Abrimos o cerramos la ventana emergente
     Output("modal-centered", "is_open"),
     # Reiniciamos nuestros botones
@@ -133,29 +141,33 @@ def open_modal(add_button, ok_button, cancel_button,
                tipo_onda, numero_periodos, amplitud, resolucion, is_open):
     
     ventana_visible = False
-
+    content = utils2.initial_content_simulation()
 
     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
     if is_open:
         if cancel_button:
             print("Cancelo")
-            cancel_button = None
             ventana_visible = False
 
         elif ok_button:
             print("Ok")
-            ok_button = None
             if tipo_onda == None or numero_periodos == None or amplitud == None or resolucion == None:
                 print("Te falta llenar algunos campos") 
                 ventana_visible = True
+                ok_button = None
                 raise PreventUpdate
             else:
+                global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
                 ventana_visible = False
-                print("Guardamos los datos")
-                print("Tipo de onda: ", tipo_onda)
-                print("Número de periodos: ", numero_periodos)
-                print("Amplitud: ", amplitud)
-                print("Resolución: ", resolucion)
+                if not isinstance(df_simulations, type(pd.DataFrame())):
+                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.create_signal_data(tipo_onda, amplitud, numero_periodos, resolucion)
+                    fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
+                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+                    content = children
+                else:
+                    print("Más simulaciones")
+
+                #global df_datos_medidos, df_fourier, fig_fourier, number_samples, f_sample, resolucion_frecuenciav
         
         else:
             ventana_visible = True
@@ -165,11 +177,58 @@ def open_modal(add_button, ok_button, cancel_button,
     else:
         if add_button:
             print("Abro la ventana")
-            add_button = None
             ventana_visible = True
         else:
             raise PreventUpdate
-    return ventana_visible, add_button, ok_button, cancel_button, None, None, None, None
+    return content, ventana_visible, None, None, None, None, None, None, None
+
+# Cuando se añade una señal simulada
+# @app.callback(
+#     # Para mostrar las simulaciones
+#     Output("output-simulation", "children"),
+#     # Aquí los valores de entrada de los botones
+#     Input("button-add-signal", "n_clicks"),
+#     Input("ok-button", "n_clicks"),
+#     Input("cancel-button", "n_clicks"),
+#     # Aquí los valores de la nueva onda a agregar
+#     Input("tipo-onda", "value"),
+#     Input("numero-periodos", "value"),
+#     Input("amplitud", "value"),
+#     Input("resolucion", "value"),
+#     # Estado de la ventana emergente
+#     State("modal-centered", "is_open"),
+# )
+# def add_simulation_signal(add_button, ok_button, cancel_button,
+#                tipo_onda, numero_periodos, amplitud, resolucion, is_open):
+    
+#     content = utils2.initial_content_simulation()
+
+#     print(add_button, ok_button, cancel_button)
+#     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
+#     if is_open:
+#         if cancel_button:
+#             content = utils2.initial_content_simulation()
+
+#         elif ok_button:
+#             print("Presionamos el botón ok")
+#             if tipo_onda == None or numero_periodos == None or amplitud == None or resolucion == None:
+#                 content = utils2.initial_content_simulation()
+#                 raise PreventUpdate
+#             else:
+#                 content = utils2.content_simulation()
+        
+#         else:
+#             content = utils2.initial_content_simulation()
+#             raise PreventUpdate
+
+#     # Si está cerrada, sólo puedo abrirla.
+#     else:
+#         if add_button:
+#             content = utils2.initial_content_simulation()
+#         else:
+#             raise PreventUpdate
+#     return content
+        
 
 if __name__ == '__main__':
     app.run_server(debug=True)
