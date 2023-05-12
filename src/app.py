@@ -120,11 +120,14 @@ def display_selected_data(relayoutData):
     Output("button-add-signal", "n_clicks"),
     Output("ok-button", "n_clicks"),
     Output("cancel-button", "n_clicks"),
-    # Reiniciamos lso valores a guardar
+    # Reiniciamos los valores a guardar
     Output("tipo-onda", "value"),
     Output("numero-periodos", "value"),
     Output("amplitud", "value"),
     Output("resolucion", "value"),
+    # Para bloquear el estado de ciertos componentes
+    Output("tipo-onda", "disabled"),
+    Output("resolucion", "disabled"),
     # Aquí los valores de entrada de los botones
     Input("button-add-signal", "n_clicks"),
     Input("ok-button", "n_clicks"),
@@ -139,9 +142,18 @@ def display_selected_data(relayoutData):
 )
 def open_modal(add_button, ok_button, cancel_button,
                tipo_onda, numero_periodos, amplitud, resolucion, is_open):
-    
+    global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
     ventana_visible = False
-    content = utils2.initial_content_simulation()
+    tipo_onda_disabled = False
+    resolucion_disabled = False
+    children = utils2.initial_content_simulation()
+
+    # Para habilitar o deshabilitar los componentes de tipo de onda y de resolución
+    if isinstance(df_simulations, type(pd.DataFrame())):
+        tipo_onda_disabled = True
+        resolucion_disabled = True
+        resolucion = len(df_simulations)
+        tipo_onda = df_simulations.columns[-1]
 
     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
     if is_open:
@@ -155,22 +167,27 @@ def open_modal(add_button, ok_button, cancel_button,
                 print("Te falta llenar algunos campos") 
                 ventana_visible = True
                 ok_button = None
+                tipo_onda = None
+                resolucion = None
                 raise PreventUpdate
             else:
-                global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
                 ventana_visible = False
+                # Si el df de las simulaciones está vacío, creamos una simulación
                 if not isinstance(df_simulations, type(pd.DataFrame())):
                     df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.create_signal_data(tipo_onda, amplitud, numero_periodos, resolucion)
                     fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
                     children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
-                    content = children
                 else:
-                    print("Más simulaciones")
-
-                #global df_datos_medidos, df_fourier, fig_fourier, number_samples, f_sample, resolucion_frecuenciav
+                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.add_signal_data(tipo_onda, 
+                                                                                                amplitud, numero_periodos, resolucion,
+                                                                                                df_simulations)
+                    fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
+                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
         
         else:
             ventana_visible = True
+            tipo_onda = None
+            resolucion = None
             raise PreventUpdate
 
     # Si está cerrada, sólo puedo abrirla.
@@ -179,56 +196,11 @@ def open_modal(add_button, ok_button, cancel_button,
             print("Abro la ventana")
             ventana_visible = True
         else:
+            tipo_onda = None
+            resolucion = None
             raise PreventUpdate
-    return content, ventana_visible, None, None, None, None, None, None, None
-
-# Cuando se añade una señal simulada
-# @app.callback(
-#     # Para mostrar las simulaciones
-#     Output("output-simulation", "children"),
-#     # Aquí los valores de entrada de los botones
-#     Input("button-add-signal", "n_clicks"),
-#     Input("ok-button", "n_clicks"),
-#     Input("cancel-button", "n_clicks"),
-#     # Aquí los valores de la nueva onda a agregar
-#     Input("tipo-onda", "value"),
-#     Input("numero-periodos", "value"),
-#     Input("amplitud", "value"),
-#     Input("resolucion", "value"),
-#     # Estado de la ventana emergente
-#     State("modal-centered", "is_open"),
-# )
-# def add_simulation_signal(add_button, ok_button, cancel_button,
-#                tipo_onda, numero_periodos, amplitud, resolucion, is_open):
-    
-#     content = utils2.initial_content_simulation()
-
-#     print(add_button, ok_button, cancel_button)
-#     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
-#     if is_open:
-#         if cancel_button:
-#             content = utils2.initial_content_simulation()
-
-#         elif ok_button:
-#             print("Presionamos el botón ok")
-#             if tipo_onda == None or numero_periodos == None or amplitud == None or resolucion == None:
-#                 content = utils2.initial_content_simulation()
-#                 raise PreventUpdate
-#             else:
-#                 content = utils2.content_simulation()
-        
-#         else:
-#             content = utils2.initial_content_simulation()
-#             raise PreventUpdate
-
-#     # Si está cerrada, sólo puedo abrirla.
-#     else:
-#         if add_button:
-#             content = utils2.initial_content_simulation()
-#         else:
-#             raise PreventUpdate
-#     return content
-        
+    print(tipo_onda_disabled, resolucion_disabled)
+    return children, ventana_visible, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled
 
 if __name__ == '__main__':
     app.run_server(debug=True)

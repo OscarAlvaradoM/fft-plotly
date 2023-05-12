@@ -52,6 +52,7 @@ modal = dbc.Modal(
             [
                 dbc.ModalHeader(dbc.ModalTitle("Configure la onda a simular:"), close_button=True),
                 dbc.ModalBody([
+                        dbc.Label("Tipo de Onda:"),
                         dcc.Dropdown(['Sinusoidal', 'Cuadrada', 'Triangular', 'Sierra'], id="tipo-onda", placeholder="Selecciona un tipo de onda", value=None),
                         dbc.Label("Número de periodos:"),
                         dbc.Input(id="numero-periodos", type="number", placeholder="Ingresa número de periodos", min=1, value=None),
