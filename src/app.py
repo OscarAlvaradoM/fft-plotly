@@ -1,138 +1,206 @@
-import base64
-import io
-
-import plotly.graph_objects as go
+import pandas as pd
 
 import dash
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from dash import dcc, html, dash_table
+from dash import dcc, html
+from dash.exceptions import PreventUpdate
 
 import utils
+import utils2
+from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE
+from components import sidebar, sidebar2
 
-import pandas as pd
+f_sample = None
+number_samples = None
+resolucion_frecuencia = None
+datos_medidos_a_mostrar = None
+df_datos_medidos, df_fourier = None, None
+fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
 
-#external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+df_simulations = None
 
 # Con esto inicializamos la aplicación
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-colors = {"text_color": "#D8D8D8",
-          "background_color_1": "#1E1E1E",
-          "background_color_2": "#323130"}
-
-# El estulo para el panel de la izquierda.
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "20rem",
-    "padding": "2rem 1rem",
-    "background-color": colors["background_color_1"]
-}
-
-# El estilo para el contenido principal, es decir, donde se encontrarán las gráficas.
-CONTENT_STYLE = {
-    "margin-left": "20rem",
-    "margin-right": "0rem",
-    "padding": "2rem 1rem",
-    "background-color": colors["background_color_2"]
-}
-
-# El estilo para el botón de carga de archivos.
-UPLOAD_STYLE = {
-            'width': '100%',
-            'height': '60px',
-            'lineHeight': '60px',
-            'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
-            'textAlign': 'center',
-            'margin': '5px',
-            'color': colors["text_color"]
-        }
-
-upload_object = dcc.Upload(
-        id='upload-data',
-        children=html.Div(['Arrastra y suelta o ', html.A('Selecciona archivos')]),
-        style=UPLOAD_STYLE,
-        # Vemos si podemos escoger múltiples archivos a la vez. Por el momento no queremos esto.
-        multiple=False
-    )
-
-sidebar = html.Div(
-    [
-        html.H2("Ondas", className="display-4", style={"color":colors["text_color"]}),
-        html.Hr(style={"color":colors["text_color"]}),
-        html.P("Selecciona el archivo que quieras visualizar:", className="lead", style={"color":colors["text_color"]}),
-        upload_object,
-        html.Br(),
-        dbc.Nav(
-            [
-                dbc.NavLink("FFT", href="/", active="exact", style={"text-align":"center"}),
-                dbc.NavLink("Histograma", href="/page_1", active="exact", style={"text-align":"center"})
-            ],
-            vertical=False,
-            pills=True,
-            justified=True
-        ),
-    ],
-    style=SIDEBAR_STYLE,
-)
-
-# Aquí está el contenido de la página principal, es decir, donde se encontrarán las gráficas.
-content = html.Div(id="output-data-upload", style=CONTENT_STYLE)
-
 # Aquí definimos la plantilla inicial. Habría que colocar todos los elementos que queremos de principio y serán los que se irán actualizando.
-app.layout = html.Div([sidebar, content])
+app.layout = html.Div([
+    dcc.Tabs([
+        dcc.Tab(label='Lectura de datos', children=
+        [
+                sidebar, utils.initial_content_data()
+        ], 
+        style=TAB_STYLE, selected_style=SELECTED_STYLE),
 
-def parse_contents(content, filename):
-    """
-    Esta función nos sirve para leer el contenido que estamos seleccionando. Se utiliza en el @callback. 
-    Con esta función también estamos decidiendo qué hacemos con el archivo que abrimos. 
+        dcc.Tab(label='Simulación de datos', children=
+        [
+            sidebar2, utils2.initial_content_simulation()
+        ], 
+        style=TAB_STYLE, selected_style=SELECTED_STYLE)
+    ], style=TABS_STYLE)
+])
+
+# ------------------------------------------ Callbacks -----------------------------------------------------------------------
+# Cuando se invocan datos medidos desde un CSV o un excel
+@app.callback(Output('output-data-upload', 'children'), # -> Es el componente que estoy editando desde acá
+              Output('propiedades1', 'style'),              # -> El estado de visibilidad del número de muestras
+              Input('upload-data', 'contents'),         # -> Archivo
+              State('upload-data', 'filename'))         # -> Nombre del archivo
+def update_output(content, filename):
+    if content:
+        global df_datos_medidos, df_fourier, fig_fourier, number_samples, f_sample, resolucion_frecuencia
+        df_datos_medidos, df_fourier, axes_1, axes_2 = utils.parse_contents(content, filename)
+        fig_datos, fig_fourier = utils.get_fig(axes_1, type="datos_medidos"), utils.get_fig(axes_2, type="fourier")
+        children = utils.valid_content(fig_datos, fig_fourier, filename)
+        style = {'display': 'block'}
+
+        number_samples, f_sample = utils.get_signal_properties(df_datos_medidos)
+        resolucion_frecuencia = utils.get_frequency_resolution(df_fourier)
+
+    else:
+        children = utils.initial_content_data()
+        style = {'display': 'None'}
+        
+    return children, style
+
+# Cuando se selecciona una sección específica de la gráfica amarilla.
+@app.callback(
+    Output('numero-muestras', 'children'),          # -> El valor del número muestras
+    Output('frecuencia-muestreo', 'children'),      # -> El valor de la frecuencia de muestreo
+    Output('resolucion-frecuencia', 'children'),    # -> El valor de la resolución en frecuencia de la transformada de Fourier
+    Output('grafica-fourier', 'figure'),          # -> La gráfica de Fourier
+    Input('grafica-medidos', 'relayoutData'))       # -> Cómo editamos la barra de abajo de la gráfica
+def display_selected_data(relayoutData):
+    global number_samples, f_sample, resolucion_frecuencia
+    if relayoutData:
+        global df_datos_medidos, df_fourier, fig_fourier
+        if 'xaxis.range' in relayoutData.keys():
+            extremo_izquierdo = relayoutData['xaxis.range'][0]
+            extremo_derecho = relayoutData['xaxis.range'][1]
+            datos_seleccionados = df_datos_medidos[df_datos_medidos.iloc[:,0] <= extremo_derecho]
+            datos_seleccionados = datos_seleccionados[datos_seleccionados.iloc[:,0] >= extremo_izquierdo]
+            datos_fourier = utils.get_fft(datos_seleccionados)
+            axes_fourier = utils.get_axes(datos_fourier, type="Fourier")
+            fig_fourier_temporal = utils.get_fig(axes_fourier, type="Fourier")
+
+            number_samples, f_sample = utils.get_signal_properties(datos_seleccionados)
+            resolucion_frecuencia = utils.get_frequency_resolution(datos_fourier)
+
+        if 'xaxis.range[0]' in relayoutData.keys():
+                extremo_izquierdo = relayoutData['xaxis.range[0]']
+                extremo_derecho = relayoutData['xaxis.range[1]']
+                datos_seleccionados = df_datos_medidos[df_datos_medidos.iloc[:,0] <= extremo_derecho]
+                datos_seleccionados = datos_seleccionados[datos_seleccionados.iloc[:,0] >= extremo_izquierdo]
+
+                datos_fourier = utils.get_fft(datos_seleccionados)
+                axes_fourier = utils.get_axes(datos_fourier, type="Fourier")
+                fig_fourier_temporal = utils.get_fig(axes_fourier, type="Fourier")
+
+                number_samples, f_sample = utils.get_signal_properties(datos_seleccionados)
+                resolucion_frecuencia = utils.get_frequency_resolution(datos_fourier)
+
+        if 'xaxis.autorange' in relayoutData.keys():
+            number_samples, f_sample = utils.get_signal_properties(df_datos_medidos)
+            resolucion_frecuencia = utils.get_frequency_resolution(df_fourier)
+            fig_fourier_temporal = fig_fourier
     
-    
-    Por el momento se abre la tabla en la página. Para nada queremos esto. 
-    Queremos que esta función sólo genere el archivo y que otras funciones hagan cosas con este archivo.
-    """
-    content_string = content.split(',')[1]
-    decoded = base64.b64decode(content_string)
-    
-    try:
-        if 'csv' in filename or 'CSV' in filename:
-            # Si el usuario está escogiendo un archivo con extensión .csv
-            file_str = io.StringIO(decoded.decode('utf-8'))
-        elif 'xls' in filename:
-            # Si el usuario está escogiendo un archivo con extensión .xls
-            file_str = io.BytesIO(decoded)
+    else:
+        fig_fourier_temporal = fig_fourier
+        
+    return number_samples, f_sample, resolucion_frecuencia, fig_fourier_temporal
 
-        onda = utils.Onda(file_str)
-        metadata = onda.metadata
-        data = onda.data
+# Para agregar señales simuladas
+@app.callback(
+    # Para mostrar las simulaciones
+    Output("output-simulation", "children"),
+    # Abrimos o cerramos la ventana emergente
+    Output("modal-centered", "is_open"),
+    # Reiniciamos nuestros botones
+    Output("button-add-signal", "n_clicks"),
+    Output("ok-button", "n_clicks"),
+    Output("cancel-button", "n_clicks"),
+    # Reiniciamos los valores a guardar
+    Output("tipo-onda", "value"),
+    Output("numero-periodos", "value"),
+    Output("amplitud", "value"),
+    Output("resolucion", "value"),
+    # Para bloquear el estado de ciertos componentes
+    Output("tipo-onda", "disabled"),
+    Output("resolucion", "disabled"),
+    # Aquí los valores de entrada de los botones
+    Input("button-add-signal", "n_clicks"),
+    Input("ok-button", "n_clicks"),
+    Input("cancel-button", "n_clicks"),
+    # Aquí los valores de la nueva onda a agregar
+    Input("tipo-onda", "value"),
+    Input("numero-periodos", "value"),
+    Input("amplitud", "value"),
+    Input("resolucion", "value"),
+    # Estado de la ventana emergente
+    State("modal-centered", "is_open"),
+)
+def open_modal(add_button, ok_button, cancel_button,
+               tipo_onda, numero_periodos, amplitud, resolucion, is_open):
+    global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
+    ventana_visible = False
+    tipo_onda_disabled = False
+    resolucion_disabled = False
+    children = utils2.initial_content_simulation()
 
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'Hubo un error procesando este archivo, por favor asegúrate que es un archivo de tipo .csv o .xls'
-        ])
+    # Para habilitar o deshabilitar los componentes de tipo de onda y de resolución
+    if isinstance(df_simulations, type(pd.DataFrame())):
+        tipo_onda_disabled = True
+        resolucion_disabled = True
+        resolucion = len(df_simulations)
+        tipo_onda = df_simulations.columns[-1]
 
-    fig = onda.plot_fourier()
+    # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
+    if is_open:
+        if cancel_button:
+            print("Cancelo")
+            ventana_visible = False
 
-    return html.Div([
-        html.H5(f"Archivo seleccionado: {filename}", style={"color":colors["text_color"]}),
+        elif ok_button:
+            print("Ok")
+            if tipo_onda == None or numero_periodos == None or amplitud == None or resolucion == None:
+                print("Te falta llenar algunos campos") 
+                ventana_visible = True
+                ok_button = None
+                tipo_onda = None
+                resolucion = None
+                raise PreventUpdate
+            else:
+                ventana_visible = False
+                # Si el df de las simulaciones está vacío, creamos una simulación
+                if not isinstance(df_simulations, type(pd.DataFrame())):
+                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.create_signal_data(tipo_onda, amplitud, numero_periodos, resolucion)
+                    fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
+                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+                else:
+                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.add_signal_data(tipo_onda, 
+                                                                                                amplitud, numero_periodos, resolucion,
+                                                                                                df_simulations)
+                    fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
+                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+        
+        else:
+            ventana_visible = True
+            tipo_onda = None
+            resolucion = None
+            raise PreventUpdate
 
-       dcc.Graph(figure=fig, id='onda_original'),
-    ])
-
-@app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'))
-def update_output(contents, name):
-    if contents:
-        children = parse_contents(contents, name)
-        return children
+    # Si está cerrada, sólo puedo abrirla.
+    else:
+        if add_button:
+            print("Abro la ventana")
+            ventana_visible = True
+        else:
+            tipo_onda = None
+            resolucion = None
+            raise PreventUpdate
+    print(tipo_onda_disabled, resolucion_disabled)
+    return children, ventana_visible, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled
 
 if __name__ == '__main__':
     app.run_server(debug=True)
