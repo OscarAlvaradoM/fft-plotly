@@ -6,15 +6,22 @@ from scipy import signal
 import plotly.graph_objects as go
 
 from dash import dcc, html
-from styles import COLORS_STYLE, INITIAL_CONTENT_SIM_STYLE, CENTERED_CONTENT_STYLE, SIGNALS_STYLE
+from styles import COLORS_STYLE, CENTERED_CONTENT_STYLE
 
 from utils import get_fft
+from components import initial_content_sim
+
 
 def initial_content_simulation():
+    div = html.Div(initial_content_sim)
+
+    return div
+
+def reset_content_simulation():
     div = html.Div([
-        html.H5("Seleccione en el panel de la izquierda la señal que desea simular.", style={"color":COLORS_STYLE["text_color"]}),
+        html.H5("Vuelva a presionar 'Agregar señal' en el panel de la izquierda para configurar señal a simular.", style={"color":COLORS_STYLE["text_color"]}),
         html.H1("Simulación de datos.", style=CENTERED_CONTENT_STYLE),
-    ], id="output-simulation", style=INITIAL_CONTENT_SIM_STYLE)
+    ])
 
     return div
 
@@ -59,10 +66,11 @@ def create_signal_data(signal_type="Sinusoidal", amplitude=1, number_periods=6, 
 
 def valid_signal_content(fig1, fig2, signal_type):
     div = html.Div([
+        html.H5("Presione 'Agregar señal' en el panel de la izquierda para sumar señales simuladas a esta señal.", style={"color":COLORS_STYLE["text_color"]}),
         html.H5(f"Tipo de ondas: {signal_type}", style={"color":COLORS_STYLE["text_color"]}),
         dcc.Graph(figure=fig1, id='grafica-signal'),
         dcc.Graph(figure=fig2, id='grafica-signal-fourier'),
-    ], style=SIGNALS_STYLE)
+    ])
     return div
 
 # Para generar el df de las señales sumadas

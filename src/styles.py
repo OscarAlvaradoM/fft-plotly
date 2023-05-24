@@ -11,6 +11,10 @@ SIDEBAR_STYLE = {
     "position": "fixed",
     "top": "42px",
     "height":"100%",
+
+    "left": 0,
+    "bottom": 0,
+
     "min-height":"1000px",
     "width":"20rem",
 
@@ -22,7 +26,8 @@ CONTENT_STYLE = {
     "margin-left": "20rem",
     "margin-right": "0rem",
     "padding": "2rem 1rem",
-    "background-color": COLORS_STYLE["background_color_2"]
+    "background-color": COLORS_STYLE["background_color_2"],
+    "position": "fixed"
 }
 
 INITIAL_CONTENT_STYLE = {
@@ -34,8 +39,7 @@ INITIAL_CONTENT_STYLE = {
 
 INITIAL_CONTENT_SIM_STYLE = {
     "margin-left": "20rem",
-    "margin-right": "0rem",
-    "margin-top": "1.5rem",
+    "margin-top": "42px",
     "padding": "1.5rem 2rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }
@@ -116,8 +120,8 @@ BUTTON_STYLE = {
 }
 
 SIGNALS_STYLE = {
-    "margin-left": "-22rem",
-    "margin-top": "-2rem",
-    "padding": "0rem 0rem",
+    "margin-left": "20rem",
+    "margin-top": "42px",
+    "padding": "1.5rem 2rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }

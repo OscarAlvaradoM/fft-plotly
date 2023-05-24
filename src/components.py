@@ -1,7 +1,7 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 
-from styles import COLORS_STYLE, SIDEBAR_STYLE, UPLOAD_STYLE
+from styles import COLORS_STYLE, SIDEBAR_STYLE, UPLOAD_STYLE, CENTERED_CONTENT_STYLE
 
 # -------------------------------- Objetos base------------------------------------------------------------------------------------
 upload_object = dcc.Upload(
@@ -41,7 +41,7 @@ add_button = html.Div(
 
 reset_button = html.Div(
     [
-        dbc.Button("Reiniciar", color="info", id="button-reset-signal", n_clicks=None),
+        dbc.Button("Reiniciar", color="info", id="button-reset-signal", n_clicks=None, style={"display":"None"}),
     ],
     className="d-grid gap-2 d-md-flex justify-content-md-end",
 )
@@ -90,3 +90,8 @@ sidebar2 = html.Div(
     ],
     style=SIDEBAR_STYLE,
 )
+
+initial_content_sim = [
+        html.H5("Presione 'Agregar señal' en el panel de la izquierda para configurar señal a simular.", style={"color":COLORS_STYLE["text_color"]}),
+        html.H1("Simulación de datos.", style=CENTERED_CONTENT_STYLE),
+    ]

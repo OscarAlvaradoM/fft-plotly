@@ -8,8 +8,8 @@ from dash.exceptions import PreventUpdate
 
 import utils
 import utils2
-from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE
-from components import sidebar, sidebar2
+from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_SIM_STYLE
+from components import sidebar, sidebar2, initial_content_sim
 
 f_sample = None
 number_samples = None
@@ -20,6 +20,8 @@ fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type
 
 df_simulations, df_fourier_simulations = None, None
 fig_simulation, fig_fourier_simulation = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
+
+content = html.Div(id="output-simulation", children=initial_content_sim, style=INITIAL_CONTENT_SIM_STYLE)
 
 # Con esto inicializamos la aplicación
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -36,7 +38,7 @@ app.layout = html.Div([
 
         dcc.Tab(label='Simulación de datos', children=
         [
-            sidebar2, utils2.initial_content_simulation()
+            sidebar2, content
         ], 
         style=TAB_STYLE, selected_style=SELECTED_STYLE)
     ], style=TABS_STYLE)
@@ -130,6 +132,8 @@ def display_selected_data(relayoutData):
     # Para bloquear el estado de ciertos componentes
     Output("tipo-onda", "disabled"),
     Output("resolucion", "disabled"),
+    # Para mostrar u ocultar el botón de reinicio
+    Output("button-reset-signal", "style"),
     # Aquí los valores de entrada de los botones
     Input("button-add-signal", "n_clicks"),
     Input("ok-button", "n_clicks"),
@@ -151,7 +155,7 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
     ventana_visible = False
     tipo_onda_disabled = False
     resolucion_disabled = False
-    children = utils2.initial_content_simulation()
+    reset_button_style = {'display': 'None'}
 
     # Para habilitar o deshabilitar los componentes de tipo de onda y de resolución
     if isinstance(df_simulations, type(pd.DataFrame())):
@@ -160,6 +164,10 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
         resolucion = len(df_simulations)
         tipo_onda = df_simulations.columns[-1]
         children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+        reset_button_style = {'display': 'block'}
+    
+    else:
+        children = utils2.initial_content_simulation()
 
     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
     if is_open:
@@ -189,6 +197,7 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
                                                                                                 df_simulations)
                     fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
                     children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+                reset_button_style = {'display': 'block'}
         
         else:
             ventana_visible = True
@@ -211,12 +220,14 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
             resolucion_disabled = False
             df_simulations = None
             children = utils2.initial_content_simulation()
+            reset_button_style = {'display': 'None'}
         
         else:
             tipo_onda = None
             resolucion = None
             raise PreventUpdate
-    return children, ventana_visible, None, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled
+    #print("Children: ",  children)
+    return children, ventana_visible, None, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled, reset_button_style
 
 if __name__ == '__main__':
     app.run_server(debug=True)
