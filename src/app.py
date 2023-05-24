@@ -17,8 +17,6 @@ resolucion_frecuencia = None
 datos_medidos_a_mostrar = None
 df_datos_medidos, df_fourier = None, None
 fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
-grafica1 = dcc.Graph(figure=fig_datos_medidos, id='grafica-medidos')
-grafica2 = dcc.Graph(figure=fig_fourier, id='grafica-fourier')
 
 df_simulations, df_fourier_simulations = None, None
 fig_simulation, fig_fourier_simulation = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
@@ -75,15 +73,15 @@ def update_output(content, filename):
     Output('numero-muestras', 'children'),          # -> El valor del número muestras
     Output('frecuencia-muestreo', 'children'),      # -> El valor de la frecuencia de muestreo
     Output('resolucion-frecuencia', 'children'),    # -> El valor de la resolución en frecuencia de la transformada de Fourier
-    Output('grafica-fourier', 'figure'),          # -> La gráfica de Fourier
+    Output('grafica-fourier', 'figure'),            # -> La gráfica de Fourier
     Input('grafica-medidos', 'relayoutData'))       # -> Cómo editamos la barra de abajo de la gráfica
-def display_selected_data(relayoutData):
+def display_selected_data(relayout_data):
     global number_samples, f_sample, resolucion_frecuencia
-    if relayoutData:
+    if relayout_data:
         global df_datos_medidos, df_fourier, fig_fourier
-        if 'xaxis.range' in relayoutData.keys():
-            extremo_izquierdo = relayoutData['xaxis.range'][0]
-            extremo_derecho = relayoutData['xaxis.range'][1]
+        if 'xaxis.range' in relayout_data.keys():
+            extremo_izquierdo = relayout_data['xaxis.range'][0]
+            extremo_derecho = relayout_data['xaxis.range'][1]
             datos_seleccionados = df_datos_medidos[df_datos_medidos.iloc[:,0] <= extremo_derecho]
             datos_seleccionados = datos_seleccionados[datos_seleccionados.iloc[:,0] >= extremo_izquierdo]
             datos_fourier = utils.get_fft(datos_seleccionados)
@@ -93,9 +91,9 @@ def display_selected_data(relayoutData):
             number_samples, f_sample = utils.get_signal_properties(datos_seleccionados)
             resolucion_frecuencia = utils.get_frequency_resolution(datos_fourier)
 
-        if 'xaxis.range[0]' in relayoutData.keys():
-                extremo_izquierdo = relayoutData['xaxis.range[0]']
-                extremo_derecho = relayoutData['xaxis.range[1]']
+        if 'xaxis.range[0]' in relayout_data.keys():
+                extremo_izquierdo = relayout_data['xaxis.range[0]']
+                extremo_derecho = relayout_data['xaxis.range[1]']
                 datos_seleccionados = df_datos_medidos[df_datos_medidos.iloc[:,0] <= extremo_derecho]
                 datos_seleccionados = datos_seleccionados[datos_seleccionados.iloc[:,0] >= extremo_izquierdo]
 
@@ -106,7 +104,7 @@ def display_selected_data(relayoutData):
                 number_samples, f_sample = utils.get_signal_properties(datos_seleccionados)
                 resolucion_frecuencia = utils.get_frequency_resolution(datos_fourier)
 
-        if 'xaxis.autorange' in relayoutData.keys():
+        if 'xaxis.autorange' in relayout_data.keys():
             number_samples, f_sample = utils.get_signal_properties(df_datos_medidos)
             resolucion_frecuencia = utils.get_frequency_resolution(df_fourier)
             fig_fourier_temporal = fig_fourier
@@ -229,8 +227,22 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
             tipo_onda = None
             resolucion = None
             raise PreventUpdate
-    #print("Children: ",  children)
     return children, ventana_visible, None, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled, reset_button_style
+
+@app.callback(
+    Output("modal-spectrogram", "is_open"),         # -> Ventana emergente con espectrograma
+    Output('button-spectrogram', 'n_clicks'),       # -> Para reiniciar el botón para mostrar el espectrograma
+    Output('grafica-modal-spectrogram', 'figure'),  # -> La gráfica del espectrograma
+    Input('button-spectrogram', 'n_clicks'),        # -> El botón para mostrar el espectrograma
+    #State("modal-spectrogram", "is_open")
+)
+def display_selected_data(n_clicks):
+    global df_datos_medidos
+    if n_clicks:
+        print("Muestro datos")
+        return True, None, utils.get_spectrogram(df_datos_medidos)
+    else:
+        raise PreventUpdate
 
 if __name__ == '__main__':
     app.run_server(debug=True)

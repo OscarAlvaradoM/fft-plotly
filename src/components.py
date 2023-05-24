@@ -12,6 +12,23 @@ upload_object = dcc.Upload(
         multiple=False
     )
 
+spectrogram_button = html.Div(
+    [
+        dbc.Button("Espectrograma", color="info", id="button-spectrogram", n_clicks=None),
+    ],
+    className="d-grid gap-2",
+)
+
+modal_spectrogram = dbc.Modal(
+            [
+                #dbc.ModalHeader(dbc.ModalTitle("Espectrograma de la señal medida:"), close_button=True),
+                dcc.Graph(figure=None, id='grafica-modal-spectrogram'),
+            ],
+            id="modal-spectrogram",
+            centered=True,
+            is_open=False,
+)
+
 sidebar = html.Div(
     [
         html.H2("Mediciones", className="display-4", style={"color":COLORS_STYLE["text_color"]}),
@@ -26,7 +43,9 @@ sidebar = html.Div(
         html.P("Frecuencia de muestreo:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
         html.P(id='frecuencia-muestreo', style={"color":COLORS_STYLE["plot_color_1"]}),
         html.P("Resolución en frecuencia:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='resolucion-frecuencia', style={"color":COLORS_STYLE["plot_color_2"]})
+        html.P(id='resolucion-frecuencia', style={"color":COLORS_STYLE["plot_color_2"]}),
+        spectrogram_button,
+        modal_spectrogram
         ], style={"display":"None"}, id="propiedades1")
     ],
     style=SIDEBAR_STYLE,
@@ -78,14 +97,14 @@ sidebar2 = html.Div(
         add_button,
         modal,
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
-        html.Div([
-        html.P("Número de muestras:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='numero-muestras-sim', style={"color":COLORS_STYLE["plot_color_1"]}),
-        html.P("Frecuencia de muestreo:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='frecuencia-muestreo-sim', style={"color":COLORS_STYLE["plot_color_1"]}),
-        html.P("Resolución en frecuencia:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
-        html.P(id='resolucion-frecuencia-sim', style={"color":COLORS_STYLE["plot_color_2"]})
-        ], style={"display":"None"}, id="propiedades2"),
+        # html.Div([
+        # html.P("Número de muestras:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
+        # html.P(id='numero-muestras-sim', style={"color":COLORS_STYLE["plot_color_1"]}),
+        # html.P("Frecuencia de muestreo:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
+        # html.P(id='frecuencia-muestreo-sim', style={"color":COLORS_STYLE["plot_color_1"]}),
+        # html.P("Resolución en frecuencia:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
+        # html.P(id='resolucion-frecuencia-sim', style={"color":COLORS_STYLE["plot_color_2"]})
+        # ], style={"display":"None"}, id="propiedades2"),
         reset_button,
     ],
     style=SIDEBAR_STYLE,

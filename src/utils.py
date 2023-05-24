@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 import plotly.graph_objects as go
+#import matplotlib.pyplot as plt
 
 from styles import COLORS_STYLE
 from components import initial_content_measure, initial_error_content_measure
@@ -158,3 +159,43 @@ def get_frequency_resolution(df):
     frequency_resolution = f"{frequency_resolution:1.5} Hz"
 
     return frequency_resolution
+
+def get_spectrogram(df_signal):
+    if isinstance(df_signal, type(pd.DataFrame())):
+        # print(df_signal.iloc[:, -1].values)
+        # fig, ax = plt.subplots(figsize = (10,10))
+        # ax.specgram(df_signal.iloc[:, -1].values, Fs=6, cmap="rainbow")
+        # ax.set_title('Spectrogram Using matplotlib.pyplot.specgram() Method')
+        # ax.set_xlabel("DATA")
+        # ax.set_ylabel("TIME")
+
+        trace1 = {
+        "type": "heatmap", 
+        "x": df_signal.iloc[:,0].values,
+        "y": np.sort(np.random.rand(len(df_signal))),
+        "z": df_signal.iloc[:,1].values,
+        "colorscale": "Jet"}
+
+        data = go.Heatmap(z=trace1["z"], x=trace1["x"], y=trace1["y"], colorscale=trace1["colorscale"])
+        layout = {
+        "title": {"text": "Espectrograma de los datos medidos."}, 
+        "xaxis": {"title": {"text": "Tiempo"}}, 
+        "yaxis": {"title": {"text": "Frecuencia"}},
+        "width": 650,
+        "height": 650,
+        }
+        fig = go.Figure(data=data, layout=layout)
+
+        # fig = go.Figure(data=go.Heatmap(
+        #             z=[[1, 20, 30],
+        #               [20, 1, 60],
+        #               [30, 60, 1]],
+        #             text=[['one', 'twenty', 'thirty'],
+        #                   ['twenty', 'one', 'sixty'],
+        #                   ['thirty', 'sixty', 'one']],
+        #             texttemplate="%{text}",
+        #             textfont={"size":20}))
+
+        return fig
+    else:
+        return None
