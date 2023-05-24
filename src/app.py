@@ -18,7 +18,8 @@ datos_medidos_a_mostrar = None
 df_datos_medidos, df_fourier = None, None
 fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
 
-df_simulations = None
+df_simulations, df_fourier_simulations = None, None
+fig_simulation, fig_fourier_simulation = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
 
 # Con esto inicializamos la aplicación
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -118,6 +119,7 @@ def display_selected_data(relayoutData):
     Output("modal-centered", "is_open"),
     # Reiniciamos nuestros botones
     Output("button-add-signal", "n_clicks"),
+    Output("button-reset-signal", "n_clicks"),
     Output("ok-button", "n_clicks"),
     Output("cancel-button", "n_clicks"),
     # Reiniciamos los valores a guardar
@@ -132,6 +134,8 @@ def display_selected_data(relayoutData):
     Input("button-add-signal", "n_clicks"),
     Input("ok-button", "n_clicks"),
     Input("cancel-button", "n_clicks"),
+    # El botón de reinicio
+    Input("button-reset-signal", "n_clicks"),
     # Aquí los valores de la nueva onda a agregar
     Input("tipo-onda", "value"),
     Input("numero-periodos", "value"),
@@ -140,8 +144,9 @@ def display_selected_data(relayoutData):
     # Estado de la ventana emergente
     State("modal-centered", "is_open"),
 )
-def open_modal(add_button, ok_button, cancel_button,
-               tipo_onda, numero_periodos, amplitud, resolucion, is_open):
+def open_modal(add_button, ok_button, cancel_button, reset_button, 
+               tipo_onda, numero_periodos, amplitud, resolucion, 
+               is_open):
     global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
     ventana_visible = False
     tipo_onda_disabled = False
@@ -154,6 +159,7 @@ def open_modal(add_button, ok_button, cancel_button,
         resolucion_disabled = True
         resolucion = len(df_simulations)
         tipo_onda = df_simulations.columns[-1]
+        children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
 
     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
     if is_open:
@@ -190,17 +196,27 @@ def open_modal(add_button, ok_button, cancel_button,
             resolucion = None
             raise PreventUpdate
 
-    # Si está cerrada, sólo puedo abrirla.
+    # Si está cerrada, sólo puedo abrirla o borrar lo que ya tenía.
     else:
         if add_button:
             print("Abro la ventana")
             ventana_visible = True
+        
+        elif reset_button:
+            print("Reinicio")
+            tipo_onda = None
+            resolucion = None
+            ventana_visible = False
+            tipo_onda_disabled = False
+            resolucion_disabled = False
+            df_simulations = None
+            children = utils2.initial_content_simulation()
+        
         else:
             tipo_onda = None
             resolucion = None
             raise PreventUpdate
-    print(tipo_onda_disabled, resolucion_disabled)
-    return children, ventana_visible, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled
+    return children, ventana_visible, None, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled
 
 if __name__ == '__main__':
     app.run_server(debug=True)

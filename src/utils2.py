@@ -23,7 +23,6 @@ def get_dfs_signal(signal_type="Sinusoidal", amplitude=1, number_periods=6, reso
     print(signal_type, amplitude, number_periods, resolution, tiempo_muestra)
     t = np.linspace(-tiempo_muestra/2, tiempo_muestra/2, resolution)
     frequency = number_periods / tiempo_muestra
-    print(frequency)
     w = 2*np.pi*frequency
     A = amplitude / 2
 
@@ -85,6 +84,3 @@ def add_signal_data(signal_type, amplitude, number_periods, resolution, df_simul
     axes_signal, axes_fourier_signal = get_axes_sim(df_signal), get_axes_sim(df_fourier_signal, type="fourier")
     
     return df_signal, df_fourier_signal, axes_signal, axes_fourier_signal
-
-
-

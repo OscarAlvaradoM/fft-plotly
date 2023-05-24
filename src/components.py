@@ -1,7 +1,7 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 
-from styles import COLORS_STYLE, SIDEBAR_STYLE, UPLOAD_STYLE, BUTTON_STYLE
+from styles import COLORS_STYLE, SIDEBAR_STYLE, UPLOAD_STYLE
 
 # -------------------------------- Objetos base------------------------------------------------------------------------------------
 upload_object = dcc.Upload(
@@ -19,15 +19,6 @@ sidebar = html.Div(
         html.P("Selecciona el archivo que quieras visualizar:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
         upload_object,
         html.Br(),
-        # dbc.Nav(
-        #     [
-        #         dbc.NavLink("FFT", href="/", active="exact", style={"text-align":"center"}),
-        #         dbc.NavLink("Espectrograma", href="/page_1", active="exact", style={"text-align":"center"})
-        #     ],
-        #     vertical=False,
-        #     pills=True,
-        #     justified=True
-        # ),
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
         html.Div([
         html.P("Número de muestras:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
@@ -41,11 +32,18 @@ sidebar = html.Div(
     style=SIDEBAR_STYLE,
 )
 
-button = html.Div(
+add_button = html.Div(
     [
         dbc.Button("Agregar Señal", outline=True, color="info", id="button-add-signal", n_clicks=None),
     ],
     className="d-grid gap-2",
+)
+
+reset_button = html.Div(
+    [
+        dbc.Button("Reiniciar", color="info", id="button-reset-signal", n_clicks=None),
+    ],
+    className="d-grid gap-2 d-md-flex justify-content-md-end",
 )
 
 modal = dbc.Modal(
@@ -77,7 +75,7 @@ sidebar2 = html.Div(
     [
         html.H2("Simulación", className="display-4", style={"color":COLORS_STYLE["text_color"]}),
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
-        button,
+        add_button,
         modal,
         html.Hr(style={"color":COLORS_STYLE["text_color"]}),
         html.Div([
@@ -87,7 +85,8 @@ sidebar2 = html.Div(
         html.P(id='frecuencia-muestreo-sim', style={"color":COLORS_STYLE["plot_color_1"]}),
         html.P("Resolución en frecuencia:", className="lead", style={"color":COLORS_STYLE["text_color"]}),
         html.P(id='resolucion-frecuencia-sim', style={"color":COLORS_STYLE["plot_color_2"]})
-        ], style={"display":"None"}, id="propiedades2")
+        ], style={"display":"None"}, id="propiedades2"),
+        reset_button,
     ],
     style=SIDEBAR_STYLE,
 )
