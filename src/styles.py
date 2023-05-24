@@ -30,10 +30,14 @@ CONTENT_STYLE = {
     "position": "fixed"
 }
 
-INITIAL_CONTENT_STYLE = {
-    "margin-left": "10rem",
-    "margin-right": "0rem",
-    "padding": "1.5rem 1rem",
+INITIAL_CONTENT_MEASURE_STYLE = {
+    # "margin-left": "10rem",
+    # "margin-right": "0rem",
+    # "padding": "1.5rem 1rem",
+    # "background-color": COLORS_STYLE["background_color_2"]
+    "margin-left": "20rem",
+    "margin-top": "42px",
+    "padding": "1.5rem 2rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }
 

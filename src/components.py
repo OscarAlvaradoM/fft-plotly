@@ -95,3 +95,12 @@ initial_content_sim = [
         html.H5("Presione 'Agregar señal' en el panel de la izquierda para configurar señal a simular.", style={"color":COLORS_STYLE["text_color"]}),
         html.H1("Simulación de datos.", style=CENTERED_CONTENT_STYLE),
     ]
+
+initial_content_measure = [
+        html.H5("Arrastre o presione en el área punteada del panel de la izquierda para observar datos medidos.", style={"color":COLORS_STYLE["text_color"]}),
+        html.H1("Medición de datos.", style=CENTERED_CONTENT_STYLE)
+    ]
+
+initial_error_content_measure = [
+        html.H5(f'Hubo un error procesando este archivo, por favor asegúrate que es un archivo de tipo .csv o .xls', style={"color":COLORS_STYLE["text_color"]}),
+    ]

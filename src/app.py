@@ -8,8 +8,8 @@ from dash.exceptions import PreventUpdate
 
 import utils
 import utils2
-from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_SIM_STYLE
-from components import sidebar, sidebar2, initial_content_sim
+from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_SIM_STYLE, INITIAL_CONTENT_MEASURE_STYLE
+from components import sidebar, sidebar2, initial_content_sim, initial_content_measure
 
 f_sample = None
 number_samples = None
@@ -17,14 +17,17 @@ resolucion_frecuencia = None
 datos_medidos_a_mostrar = None
 df_datos_medidos, df_fourier = None, None
 fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
+grafica1 = dcc.Graph(figure=fig_datos_medidos, id='grafica-medidos')
+grafica2 = dcc.Graph(figure=fig_fourier, id='grafica-fourier')
 
 df_simulations, df_fourier_simulations = None, None
 fig_simulation, fig_fourier_simulation = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
 
-content = html.Div(id="output-simulation", children=initial_content_sim, style=INITIAL_CONTENT_SIM_STYLE)
+content_measure = html.Div(id="output-data-upload", children=initial_content_measure, style=INITIAL_CONTENT_MEASURE_STYLE)
+content_sim = html.Div(id="output-simulation", children=initial_content_sim, style=INITIAL_CONTENT_SIM_STYLE)
 
 # Con esto inicializamos la aplicación
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 #app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Aquí definimos la plantilla inicial. Habría que colocar todos los elementos que queremos de principio y serán los que se irán actualizando.
@@ -32,13 +35,13 @@ app.layout = html.Div([
     dcc.Tabs([
         dcc.Tab(label='Lectura de datos', children=
         [
-                sidebar, utils.initial_content_data()
+                sidebar, content_measure
         ], 
         style=TAB_STYLE, selected_style=SELECTED_STYLE),
 
         dcc.Tab(label='Simulación de datos', children=
         [
-            sidebar2, content
+            sidebar2, content_sim
         ], 
         style=TAB_STYLE, selected_style=SELECTED_STYLE)
     ], style=TABS_STYLE)

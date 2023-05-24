@@ -17,14 +17,6 @@ def initial_content_simulation():
 
     return div
 
-def reset_content_simulation():
-    div = html.Div([
-        html.H5("Vuelva a presionar 'Agregar señal' en el panel de la izquierda para configurar señal a simular.", style={"color":COLORS_STYLE["text_color"]}),
-        html.H1("Simulación de datos.", style=CENTERED_CONTENT_STYLE),
-    ])
-
-    return div
-
 # ------------------ Acá vienen las funciones de las señales simuladas ---------------------
 def get_dfs_signal(signal_type="Sinusoidal", amplitude=1, number_periods=6, resolution=3_000, tiempo_muestra=0.0032):
     print(signal_type, amplitude, number_periods, resolution, tiempo_muestra)

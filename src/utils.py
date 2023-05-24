@@ -6,7 +6,8 @@ import pandas as pd
 
 import plotly.graph_objects as go
 
-from styles import COLORS_STYLE, INITIAL_CONTENT_STYLE
+from styles import COLORS_STYLE
+from components import initial_content_measure, initial_error_content_measure
 
 from dash import dcc, html
 
@@ -38,22 +39,12 @@ def get_empty_fig(type="datos_medidos"):
     return fig
 
 def initial_content_data():
-    fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
-    div = html.Div([
-        html.H5("Seleccione un archivo en el panel de la izquierda.", style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Graph(figure=fig1, id='grafica-medidos'),
-        dcc.Graph(figure=fig2, id='grafica-fourier'),
-    ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
+    div = html.Div(initial_content_measure)
 
     return div
 
 def error_content():
-    fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
-    div = html.Div([
-        html.H5(f'Hubo un error procesando este archivo, por favor asegúrate que es un archivo de tipo .csv o .xls', style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Graph(figure=fig1, id='grafica-medidos'),
-        dcc.Graph(figure=fig2, id='grafica-fourier'),
-    ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
+    div = html.Div(initial_error_content_measure)
 
     return div
 
