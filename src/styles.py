@@ -41,7 +41,14 @@ INITIAL_CONTENT_MEASURE_STYLE = {
     "background-color": COLORS_STYLE["background_color_2"]
 }
 
-INITIAL_CONTENT_SIM_STYLE = {
+INITIAL_CONTENT_ADD_STYLE = {
+    "margin-left": "20rem",
+    "margin-top": "42px",
+    "padding": "1.5rem 2rem",
+    "background-color": COLORS_STYLE["background_color_2"]
+}
+
+INITIAL_CONTENT_OTHER_STYLE = {
     "margin-left": "20rem",
     "margin-top": "42px",
     "padding": "1.5rem 2rem",

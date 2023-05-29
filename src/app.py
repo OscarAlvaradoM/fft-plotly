@@ -8,8 +8,8 @@ from dash.exceptions import PreventUpdate
 
 import utils
 import utils2
-from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_SIM_STYLE, INITIAL_CONTENT_MEASURE_STYLE
-from components import sidebar, sidebar2, initial_content_sim, initial_content_measure
+from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_ADD_STYLE, INITIAL_CONTENT_OTHER_STYLE, INITIAL_CONTENT_MEASURE_STYLE
+from components import sidebar, sidebar2, sidebar3, initial_content_add_signals, initial_content_other_signals, initial_content_measure
 
 f_sample = None
 number_samples = None
@@ -21,8 +21,12 @@ fig_datos_medidos, fig_fourier = utils.get_empty_fig(), utils.get_empty_fig(type
 df_simulations, df_fourier_simulations = None, None
 fig_simulation, fig_fourier_simulation = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
 
+df_simulations_other_signals, df_fourier_simulations_other_signals = None, None
+fig_simulation_other_signals, fig_fourier_simulation_other_signals = utils.get_empty_fig(), utils.get_empty_fig(type="Fourier")
+
 content_measure = html.Div(id="output-data-upload", children=initial_content_measure, style=INITIAL_CONTENT_MEASURE_STYLE)
-content_sim = html.Div(id="output-simulation", children=initial_content_sim, style=INITIAL_CONTENT_SIM_STYLE)
+content_add_signals = html.Div(id="output-add-signals", children=initial_content_add_signals, style=INITIAL_CONTENT_ADD_STYLE)
+content_other_signals = html.Div(id="output-other-signals", children=initial_content_other_signals, style=INITIAL_CONTENT_OTHER_STYLE)
 
 # Con esto inicializamos la aplicación
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
@@ -37,11 +41,16 @@ app.layout = html.Div([
         ], 
         style=TAB_STYLE, selected_style=SELECTED_STYLE),
 
-        dcc.Tab(label='Simulación de datos', children=
+        dcc.Tab(label='Suma de señales', children=
         [
-            sidebar2, content_sim
+            sidebar2, content_add_signals
         ], 
-        style=TAB_STYLE, selected_style=SELECTED_STYLE)
+        style=TAB_STYLE, selected_style=SELECTED_STYLE),
+        dcc.Tab(label='Otras señales', children=
+        [
+            sidebar3, content_other_signals
+        ],
+        style=TAB_STYLE, selected_style=SELECTED_STYLE),
     ], style=TABS_STYLE)
 ])
 
@@ -114,27 +123,25 @@ def display_selected_data(relayout_data):
         
     return number_samples, f_sample, resolucion_frecuencia, fig_fourier_temporal
 
-# Para agregar señales simuladas
+# Para sumar señales simuladas
 @app.callback(
     # Para mostrar las simulaciones
-    Output("output-simulation", "children"),
+    Output("output-add-signals", "children"),
     # Abrimos o cerramos la ventana emergente
-    Output("modal-centered", "is_open"),
+    Output("modal-signal-adding", "is_open"),
     # Reiniciamos nuestros botones
     Output("button-add-signal", "n_clicks"),
     Output("button-reset-signal", "n_clicks"),
     Output("ok-button", "n_clicks"),
     Output("cancel-button", "n_clicks"),
     # Reiniciamos los valores a guardar
-    Output("tipo-onda", "value"),
-    Output("numero-periodos", "value"),
+    Output("frecuencia", "value"),
     Output("amplitud", "value"),
-    Output("resolucion", "value"),
-    # Para bloquear el estado de ciertos componentes
-    Output("tipo-onda", "disabled"),
-    Output("resolucion", "disabled"),
     # Para mostrar u ocultar el botón de reinicio
     Output("button-reset-signal", "style"),
+    # Para cambiar la leyenda que muestra el botón
+    Output("button-add-signal", "children"),
+
     # Aquí los valores de entrada de los botones
     Input("button-add-signal", "n_clicks"),
     Input("ok-button", "n_clicks"),
@@ -142,33 +149,26 @@ def display_selected_data(relayout_data):
     # El botón de reinicio
     Input("button-reset-signal", "n_clicks"),
     # Aquí los valores de la nueva onda a agregar
-    Input("tipo-onda", "value"),
-    Input("numero-periodos", "value"),
+    Input("frecuencia", "value"),
     Input("amplitud", "value"),
-    Input("resolucion", "value"),
+
     # Estado de la ventana emergente
-    State("modal-centered", "is_open"),
+    State("modal-signal-adding", "is_open"),
 )
-def open_modal(add_button, ok_button, cancel_button, reset_button, 
-               tipo_onda, numero_periodos, amplitud, resolucion, 
+def open_modal_add_signals(add_button, ok_button, cancel_button, reset_button, 
+               frecuencia, amplitud,
                is_open):
     global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
     ventana_visible = False
-    tipo_onda_disabled = False
-    resolucion_disabled = False
     reset_button_style = {'display': 'None'}
 
     # Para habilitar o deshabilitar los componentes de tipo de onda y de resolución
     if isinstance(df_simulations, type(pd.DataFrame())):
-        tipo_onda_disabled = True
-        resolucion_disabled = True
-        resolucion = len(df_simulations)
-        tipo_onda = df_simulations.columns[-1]
-        children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+        children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation)
         reset_button_style = {'display': 'block'}
-    
     else:
         children = utils2.initial_content_simulation()
+        button_legend = "Sumar señales"
 
     # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
     if is_open:
@@ -178,32 +178,29 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
 
         elif ok_button:
             print("Ok")
-            if tipo_onda == None or numero_periodos == None or amplitud == None or resolucion == None:
+            if frecuencia == None or amplitud == None:
                 print("Te falta llenar algunos campos") 
                 ventana_visible = True
                 ok_button = None
-                tipo_onda = None
-                resolucion = None
                 raise PreventUpdate
             else:
                 ventana_visible = False
                 # Si el df de las simulaciones está vacío, creamos una simulación
                 if not isinstance(df_simulations, type(pd.DataFrame())):
-                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.create_signal_data(tipo_onda, amplitud, numero_periodos, resolucion)
+                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.create_signal_data(amplitud, frecuencia)
                     fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
-                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation)
                 else:
-                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.add_signal_data(tipo_onda, 
-                                                                                                amplitud, numero_periodos, resolucion,
+                    df_simulations, df_fourier_simulations, axes_signal, axes_fourier_signal = utils2.add_signal_data( 
+                                                                                                amplitud, frecuencia,
                                                                                                 df_simulations)
                     fig_simulation, fig_fourier_simulation = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
-                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation, tipo_onda)
+                    children = utils2.valid_signal_content(fig_simulation, fig_fourier_simulation)
                 reset_button_style = {'display': 'block'}
+                button_legend = "Agregar señal"
         
         else:
             ventana_visible = True
-            tipo_onda = None
-            resolucion = None
             raise PreventUpdate
 
     # Si está cerrada, sólo puedo abrirla o borrar lo que ya tenía.
@@ -214,35 +211,125 @@ def open_modal(add_button, ok_button, cancel_button, reset_button,
         
         elif reset_button:
             print("Reinicio")
-            tipo_onda = None
-            resolucion = None
             ventana_visible = False
-            tipo_onda_disabled = False
-            resolucion_disabled = False
             df_simulations = None
+            children = utils2.initial_content_simulation()
+            reset_button_style = {'display': 'None'}
+            button_legend = "Sumar señales"
+        
+        else:
+            raise PreventUpdate
+    return children, ventana_visible, None, None, None, None, None, None, reset_button_style, button_legend
+
+# Para agregar otras señales simuladas
+@app.callback(
+    # Para mostrar las simulaciones
+    Output("output-other-signals", "children"),
+    # Abrimos o cerramos la ventana emergente
+    Output("modal-other-signals", "is_open"),
+    # Reiniciamos nuestros botones
+    Output("button-other-signals", "n_clicks"),
+    Output("button-reset-other-signals", "n_clicks"),
+    Output("ok-button-other-signals", "n_clicks"),
+    Output("cancel-button-other-signals", "n_clicks"),
+    # Reiniciamos los valores a guardar
+    Output("tipo-onda", "value"),
+    Output("frecuencia-other-signals", "value"),
+    Output("amplitud-other-signals", "value"),
+    # Para mostrar u ocultar el botón de reinicio
+    Output("button-reset-other-signals", "style"),
+    
+    # Aquí los valores de entrada de los botones
+    Input("button-other-signals", "n_clicks"),
+    Input("ok-button-other-signals", "n_clicks"),
+    Input("cancel-button-other-signals", "n_clicks"),
+    # El botón de reinicio
+    Input("button-reset-other-signals", "n_clicks"),
+    # Aquí los valores de la nueva onda a agregar
+    Input("tipo-onda", "value"),
+    Input("frecuencia-other-signals", "value"),
+    Input("amplitud-other-signals", "value"),
+
+     # Estado de la ventana emergente
+    State("modal-other-signals", "is_open"),
+)
+def open_modal_other_signals(add_button_other_signals, ok_button_other_signals, cancel_button_other_signals, reset_button_other_signals, 
+               tipo_onda_other_signals, frecuencia_other_signals, amplitud_other_signals,
+               is_open_other_signals):
+    global df_simulations_other_signals, df_fourier_simulations_other_signals, fig_simulation_other_signals, fig_fourier_simulation_other_signals
+    ventana_visible = False
+    reset_button_style = {'display': 'None'}
+
+    # Para habilitar o deshabilitar los componentes de tipo de onda y de resolución
+    if isinstance(df_simulations_other_signals, type(pd.DataFrame())):
+        tipo_onda_other_signals = df_simulations_other_signals.columns[-1]
+        children = utils2.valid_signal_content(fig_simulation_other_signals, fig_fourier_simulation_other_signals)
+        reset_button_style = {'display': 'block'}
+    
+    else:
+        children = utils2.initial_content_simulation()
+
+    # Si está abierta, sólo puede aceptar lo que tengo o cerrar la ventana y cancelar.
+    if is_open_other_signals:
+        if cancel_button_other_signals:
+            print("Cancelo")
+            ventana_visible = False
+
+        elif ok_button_other_signals:
+            print("Ok")
+            if tipo_onda_other_signals == None or frecuencia_other_signals == None or amplitud_other_signals == None:
+                print("Te falta llenar algunos campos") 
+                ventana_visible = True
+                ok_button_other_signals = None
+                tipo_onda_other_signals = None
+                raise PreventUpdate
+            else:
+                ventana_visible = False
+                # Si el df de las simulaciones está vacío, creamos una simulación
+                df_simulations_other_signals, df_fourier_simulations_other_signals, axes_signal, axes_fourier_signal = utils2.create_signal_data(amplitud_other_signals, frecuencia_other_signals, 
+                                                                                                                         tipo_onda_other_signals)
+                fig_simulation_other_signals, fig_fourier_simulation_other_signals = utils.get_fig(axes_signal, type="datos_medidos"), utils.get_fig(axes_fourier_signal, type="fourier")
+                children = utils2.valid_signal_content(fig_simulation_other_signals, fig_fourier_simulation_other_signals)
+                reset_button_style = {'display': 'block'}
+        
+        else:
+            ventana_visible = True
+            tipo_onda_other_signals = None
+            raise PreventUpdate
+
+    # Si está cerrada, sólo puedo abrirla o borrar lo que ya tenía.
+    else:
+        if add_button_other_signals:
+            print("Abro la ventana")
+            ventana_visible = True
+        
+        elif reset_button_other_signals:
+            print("Reinicio")
+            tipo_onda_other_signals = None
+            ventana_visible = False
+            df_simulations_other_signals = None
             children = utils2.initial_content_simulation()
             reset_button_style = {'display': 'None'}
         
         else:
-            tipo_onda = None
-            resolucion = None
+            tipo_onda_other_signals = None
             raise PreventUpdate
-    return children, ventana_visible, None, None, None, None, tipo_onda, None, None, resolucion, tipo_onda_disabled, resolucion_disabled, reset_button_style
+    return children, ventana_visible, None, None, None, None, tipo_onda_other_signals, None, None, reset_button_style
+
 
 @app.callback(
     Output("modal-spectrogram", "is_open"),         # -> Ventana emergente con espectrograma
     Output('button-spectrogram', 'n_clicks'),       # -> Para reiniciar el botón para mostrar el espectrograma
     Output('grafica-modal-spectrogram', 'figure'),  # -> La gráfica del espectrograma
     Input('button-spectrogram', 'n_clicks'),        # -> El botón para mostrar el espectrograma
-    #State("modal-spectrogram", "is_open")
 )
 def display_selected_data(n_clicks):
     global df_datos_medidos
     if n_clicks:
-        print("Muestro datos")
         return True, None, utils.get_spectrogram(df_datos_medidos)
     else:
         raise PreventUpdate
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
