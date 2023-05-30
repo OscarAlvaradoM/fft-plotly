@@ -85,6 +85,9 @@ def get_dfs(content, filename):
     df_data = raw_file.iloc[14:,:]
     df_data = df_data.astype(float)
 
+    if len(df_data) % 2 == 0:
+        df_data = df_data.iloc[1:, :]
+
     df_fourier = get_fft(df_data)
 
     return df_data, df_fourier
