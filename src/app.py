@@ -8,7 +8,7 @@ from dash.exceptions import PreventUpdate
 
 import utils
 import utils2
-from styles import TABS_STYLE, TAB_STYLE, SELECTED_STYLE, INITIAL_CONTENT_ADD_STYLE, INITIAL_CONTENT_OTHER_STYLE, INITIAL_CONTENT_MEASURE_STYLE
+from styles import TABS_STYLE, TABS_STYLE_2, TAB_STYLE, TAB_STYLE_2, SELECTED_STYLE, SELECTED_STYLE_2, INITIAL_CONTENT_ADD_STYLE, INITIAL_CONTENT_OTHER_STYLE, INITIAL_CONTENT_MEASURE_STYLE
 from components import sidebar, sidebar2, sidebar3, initial_content_add_signals, initial_content_other_signals, initial_content_measure
 
 f_sample = None
@@ -34,24 +34,33 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_
 
 # Aquí definimos la plantilla inicial. Habría que colocar todos los elementos que queremos de principio y serán los que se irán actualizando.
 app.layout = html.Div([
-    dcc.Tabs([
-        dcc.Tab(label='Lectura de datos', children=
+    dcc.Tabs(
         [
-                sidebar, content_measure
-        ], 
+        dcc.Tab(label='Aprendiendo con la FFT', children=
+            [
+            dcc.Tabs([
+                dcc.Tab(label='Suma de señales', children=
+                    [
+                        sidebar2, content_add_signals
+                    ], 
+                style=TAB_STYLE_2, selected_style=SELECTED_STYLE_2),
+
+                dcc.Tab(label='Otras señales', children=
+                    [
+                        sidebar3, content_other_signals
+                    ],
+                style=TAB_STYLE_2, selected_style=SELECTED_STYLE_2)
+            ], style=TABS_STYLE_2)
+            ], 
         style=TAB_STYLE, selected_style=SELECTED_STYLE),
 
-        dcc.Tab(label='Suma de señales', children=
-        [
-            sidebar2, content_add_signals
+        dcc.Tab(label='Experimentando con la FFT', children=
+            [
+                sidebar, content_measure
+            ], 
+        style=TAB_STYLE, selected_style=SELECTED_STYLE)
         ], 
-        style=TAB_STYLE, selected_style=SELECTED_STYLE),
-        dcc.Tab(label='Otras señales', children=
-        [
-            sidebar3, content_other_signals
-        ],
-        style=TAB_STYLE, selected_style=SELECTED_STYLE),
-    ], style=TABS_STYLE)
+    style=TABS_STYLE)
 ])
 
 # ------------------------------------------ Callbacks -----------------------------------------------------------------------

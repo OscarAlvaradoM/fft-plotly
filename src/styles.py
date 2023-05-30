@@ -89,6 +89,18 @@ TAB_STYLE = {
     'color' : '#D8D8D8',
 }
 
+TAB_STYLE_2 = {
+    'top': '420px',
+    'border': 'none',
+    'boxShadow': 'inset 0px -1px 0px 0px lightgrey',
+    'background': 'white',
+    'paddingTop': "5px",
+    'paddingBottom': 0,
+    'height': '42px',
+    'background': '#1E1E1E',
+    'color' : '#D8D8D8',
+}
+
 # Este es el estilo de las pestañas en general.
 TABS_STYLE = {
     "position": "fixed",
@@ -97,8 +109,31 @@ TABS_STYLE = {
     "height":"auto"
 }
 
+TABS_STYLE_2 = {
+    "position": "relative",
+    "top": "42px",
+    "margin-left": "20rem",
+    "width":"relative",
+    "min-width":"1000px",
+    "height":"auto"
+}
+
 # Este es el estilo de las pestañas que están seleccionadas.
 SELECTED_STYLE = {
+    'boxShadow': 'none',
+    'borderLeft': 'none',
+    'borderRight': 'none',
+    'borderTop': 'none',
+    'borderBottom': '2px #004A96 solid',
+    'background': '#000000',
+    'paddingTop': "5px",
+    'paddingBottom': 0,
+    'height': '42px',
+    'color' : '#D8D8D8',
+}
+
+SELECTED_STYLE_2 = {
+    'top': '420px',
     'boxShadow': 'none',
     'borderLeft': 'none',
     'borderRight': 'none',
