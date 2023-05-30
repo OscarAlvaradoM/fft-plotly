@@ -54,8 +54,8 @@ def get_fft(df):
     ffty = np.fft.fft(df.iloc[:,1])
 
     N = len(df)
-    f_sample = 1/(df.iloc[1,0] - df.iloc[0,0])
-    f_interval = f_sample / N
+    f_sample = int(1/(df.iloc[1,0] - df.iloc[0,0]))
+    f_interval = f_sample / (N-1)
     hertz = np.arange(N)*f_interval
     hertz = hertz - np.ceil(max(hertz)/2)
     specs = np.fft.fftshift(20*np.log10(ffty))
@@ -91,9 +91,19 @@ def get_dfs(content, filename):
 
 def get_axes(df, type="datos_medidos"):
     if type == "datos_medidos":
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]))
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], 
+                          name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]),
+                          hovertemplate =
+                                '<b>Tiempo: %{x:.5f} s</b>'+
+                                '<br>Amplitud: %{y:.2f} V<extra></extra>'
+                            )
     else:
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], 
+                          name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]),
+                          hovertemplate =
+                                '<b>Frecuencia: %{x:.2f} Hz</b>'+
+                                '<br>Energía: %{y:.2f} dB<extra></extra>'
+                            )
 
     return axes
 

@@ -18,7 +18,7 @@ def initial_content_simulation():
     return div
 
 # ------------------ Acá vienen las funciones de las señales simuladas ---------------------
-def get_dfs_signal(amplitude=1, frequency=6, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=10):
+def get_dfs_signal(amplitude=1, frequency=6, signal_type="Sinusoidal", resolution=2_001, tiempo_muestra=10):
     t = np.linspace(-tiempo_muestra/2, tiempo_muestra/2, resolution)
     #frequency = number_periods / tiempo_muestra
     w = 2*np.pi*frequency
@@ -43,13 +43,23 @@ def get_dfs_signal(amplitude=1, frequency=6, signal_type="Sinusoidal", resolutio
 
 def get_axes_sim(df, type="datos_simulados"):
     if type == "datos_simulados":
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,-1], name = "Simulación", marker=dict(color = COLORS_STYLE["plot_color_1"]))
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,-1], 
+                          name = "Simulación", marker=dict(color = COLORS_STYLE["plot_color_1"]),
+                          hovertemplate =
+                                '<b>Tiempo: %{x:.3f} s</b>'+
+                                '<br>Amplitud: %{y:.2f} V<extra></extra>'
+                            )
     else:
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,-1], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,-1], 
+                          name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]),
+                          hovertemplate =
+                                '<b>Frecuencia: %{x:.2f} Hz</b>'+
+                                '<br>Energía: %{y:.2f} dB<extra></extra>'
+                          )
 
     return axes
 
-def create_signal_data(amplitude=1, frequency=500, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=10):
+def create_signal_data(amplitude=1, frequency=500, signal_type="Sinusoidal", resolution=2_001, tiempo_muestra=10):
     df_signal, df_fourier_signal = get_dfs_signal(amplitude, frequency, signal_type, resolution, tiempo_muestra)
     axes_signal, axes_fourier_signal = get_axes_sim(df_signal), get_axes_sim(df_fourier_signal, type="fourier")
     
@@ -65,7 +75,7 @@ def valid_signal_content(fig1, fig2):
     return div
 
 # Para generar el df de las señales sumadas
-def get_added_dfs_signal(amplitude, frequency, df_simulations, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=10):
+def get_added_dfs_signal(amplitude, frequency, df_simulations, signal_type="Sinusoidal", resolution=2_001, tiempo_muestra=10):
     df_new_signal, _ = get_dfs_signal(amplitude, frequency, signal_type, resolution, tiempo_muestra)
     df_added = df_simulations.iloc[:, -1] + df_new_signal.iloc[:, -1]
     df_added = pd.concat([df_simulations, df_new_signal.iloc[:, -1], df_added], axis=1)
@@ -75,7 +85,7 @@ def get_added_dfs_signal(amplitude, frequency, df_simulations, signal_type="Sinu
     return df_added, df_added_fourier_signal
 
 # Para agregar una señal
-def add_signal_data(amplitude, frequency, df_simulations, resolution=2_000, tiempo_muestra=10):
+def add_signal_data(amplitude, frequency, df_simulations, resolution=2_001, tiempo_muestra=10):
     """
     Función para sumar una señal a otra u otras señales previamente generadas.
     """
