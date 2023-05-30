@@ -161,6 +161,7 @@ def open_modal_add_signals(add_button, ok_button, cancel_button, reset_button,
     global df_simulations, df_fourier_simulations, fig_simulation, fig_fourier_simulation
     ventana_visible = False
     reset_button_style = {'display': 'None'}
+    button_legend = "Sumar señales"
 
     # Para habilitar o deshabilitar los componentes de tipo de onda y de resolución
     if isinstance(df_simulations, type(pd.DataFrame())):

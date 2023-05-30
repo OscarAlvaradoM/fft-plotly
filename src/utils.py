@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 
 import plotly.graph_objects as go
-#import matplotlib.pyplot as plt
+
+from scipy import signal
 
 from styles import COLORS_STYLE
 from components import initial_content_measure, initial_error_content_measure
@@ -110,7 +111,7 @@ def parse_contents(content, filename):
     
     return df_datos_medidos, df_fourier, axes_1, axes_2
 
-def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
+def get_fig(axes, type="datos_medidos"):
     """
     Función que grafica tanto los datos medidos como la transformada de Fourier de dichos datos.
     """
@@ -125,10 +126,17 @@ def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
         fig.update_xaxes(rangeslider_thickness = 0.1)
         fig.update_layout(xaxis=dict(
             rangeslider=dict(visible=True)
-            )
+            ),
+            xaxis_title="Tiempo [s]",
+            yaxis_title="Amplitud [V]"
         )
         h = 310
         top_margin = 20
+    else:
+        fig.update_layout(
+            xaxis_title="Frecuencia [Hz]",
+            yaxis_title="Energía [dB]"
+        )
     
     fig.update_layout(height=h, width=1100, 
                     #title_text=f"Frecuencia de muestreo: ---",
@@ -169,11 +177,13 @@ def get_spectrogram(df_signal):
         # ax.set_xlabel("DATA")
         # ax.set_ylabel("TIME")
 
+        f, t, Sxx = signal.spectrogram(df_signal.iloc[:,-1].values, 1/(df_signal.iloc[1,0] - df_signal.iloc[0,0]))
+
         trace1 = {
         "type": "heatmap", 
-        "x": df_signal.iloc[:,0].values,
-        "y": np.sort(np.random.rand(len(df_signal))),
-        "z": df_signal.iloc[:,1].values,
+        "x": t,
+        "y": f,
+        "z": Sxx,
         "colorscale": "Jet"}
 
         data = go.Heatmap(z=trace1["z"], x=trace1["x"], y=trace1["y"], colorscale=trace1["colorscale"])

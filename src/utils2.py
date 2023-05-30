@@ -6,10 +6,10 @@ from scipy import signal
 import plotly.graph_objects as go
 
 from dash import dcc, html
-from styles import COLORS_STYLE, CENTERED_CONTENT_STYLE
+from styles import COLORS_STYLE
 
 from utils import get_fft
-from components import initial_content_add_signals, initial_content_other_signals
+from components import initial_content_add_signals
 
 
 def initial_content_simulation():
@@ -18,7 +18,7 @@ def initial_content_simulation():
     return div
 
 # ------------------ Acá vienen las funciones de las señales simuladas ---------------------
-def get_dfs_signal(amplitude=1, frequency=6, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=0.0032):
+def get_dfs_signal(amplitude=1, frequency=6, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=10):
     t = np.linspace(-tiempo_muestra/2, tiempo_muestra/2, resolution)
     #frequency = number_periods / tiempo_muestra
     w = 2*np.pi*frequency
@@ -49,7 +49,7 @@ def get_axes_sim(df, type="datos_simulados"):
 
     return axes
 
-def create_signal_data(amplitude=1, frequency=500, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=0.0032):
+def create_signal_data(amplitude=1, frequency=500, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=10):
     df_signal, df_fourier_signal = get_dfs_signal(amplitude, frequency, signal_type, resolution, tiempo_muestra)
     axes_signal, axes_fourier_signal = get_axes_sim(df_signal), get_axes_sim(df_fourier_signal, type="fourier")
     
@@ -65,7 +65,7 @@ def valid_signal_content(fig1, fig2):
     return div
 
 # Para generar el df de las señales sumadas
-def get_added_dfs_signal(amplitude, frequency, df_simulations, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=0.0032):
+def get_added_dfs_signal(amplitude, frequency, df_simulations, signal_type="Sinusoidal", resolution=2_000, tiempo_muestra=10):
     df_new_signal, _ = get_dfs_signal(amplitude, frequency, signal_type, resolution, tiempo_muestra)
     df_added = df_simulations.iloc[:, -1] + df_new_signal.iloc[:, -1]
     df_added = pd.concat([df_simulations, df_new_signal.iloc[:, -1], df_added], axis=1)
@@ -75,7 +75,7 @@ def get_added_dfs_signal(amplitude, frequency, df_simulations, signal_type="Sinu
     return df_added, df_added_fourier_signal
 
 # Para agregar una señal
-def add_signal_data(amplitude, frequency, df_simulations, resolution=2_000, tiempo_muestra=0.0032):
+def add_signal_data(amplitude, frequency, df_simulations, resolution=2_000, tiempo_muestra=10):
     """
     Función para sumar una señal a otra u otras señales previamente generadas.
     """
