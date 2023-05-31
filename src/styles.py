@@ -11,6 +11,10 @@ SIDEBAR_STYLE = {
     "position": "fixed",
     "top": "42px",
     "height":"100%",
+
+    "left": 0,
+    "bottom": 0,
+
     "min-height":"1000px",
     "width":"20rem",
 
@@ -22,20 +26,31 @@ CONTENT_STYLE = {
     "margin-left": "20rem",
     "margin-right": "0rem",
     "padding": "2rem 1rem",
-    "background-color": COLORS_STYLE["background_color_2"]
+    "background-color": COLORS_STYLE["background_color_2"],
+    "position": "fixed"
 }
 
-INITIAL_CONTENT_STYLE = {
-    "margin-left": "10rem",
-    "margin-right": "0rem",
-    "padding": "1.5rem 1rem",
-    "background-color": COLORS_STYLE["background_color_2"]
-}
-
-INITIAL_CONTENT_SIM_STYLE = {
+INITIAL_CONTENT_MEASURE_STYLE = {
+    # "margin-left": "10rem",
+    # "margin-right": "0rem",
+    # "padding": "1.5rem 1rem",
+    # "background-color": COLORS_STYLE["background_color_2"]
     "margin-left": "20rem",
-    "margin-right": "0rem",
-    "margin-top": "1.5rem",
+    "margin-top": "42px",
+    "padding": "1.5rem 2rem",
+    "background-color": COLORS_STYLE["background_color_2"]
+}
+
+INITIAL_CONTENT_ADD_STYLE = {
+    "margin-left": "20rem",
+    "margin-top": "42px",
+    "padding": "1.5rem 2rem",
+    "background-color": COLORS_STYLE["background_color_2"]
+}
+
+INITIAL_CONTENT_OTHER_STYLE = {
+    "margin-left": "20rem",
+    "margin-top": "42px",
     "padding": "1.5rem 2rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }
@@ -74,6 +89,18 @@ TAB_STYLE = {
     'color' : '#D8D8D8',
 }
 
+TAB_STYLE_2 = {
+    'top': '420px',
+    'border': 'none',
+    'boxShadow': 'inset 0px -1px 0px 0px lightgrey',
+    'background': 'white',
+    'paddingTop': "5px",
+    'paddingBottom': 0,
+    'height': '42px',
+    'background': '#1E1E1E',
+    'color' : '#D8D8D8',
+}
+
 # Este es el estilo de las pestañas en general.
 TABS_STYLE = {
     "position": "fixed",
@@ -82,8 +109,31 @@ TABS_STYLE = {
     "height":"auto"
 }
 
+TABS_STYLE_2 = {
+    "position": "relative",
+    "top": "42px",
+    "margin-left": "20rem",
+    "width":"relative",
+    "min-width":"1000px",
+    "height":"auto"
+}
+
 # Este es el estilo de las pestañas que están seleccionadas.
 SELECTED_STYLE = {
+    'boxShadow': 'none',
+    'borderLeft': 'none',
+    'borderRight': 'none',
+    'borderTop': 'none',
+    'borderBottom': '2px #004A96 solid',
+    'background': '#000000',
+    'paddingTop': "5px",
+    'paddingBottom': 0,
+    'height': '42px',
+    'color' : '#D8D8D8',
+}
+
+SELECTED_STYLE_2 = {
+    'top': '420px',
     'boxShadow': 'none',
     'borderLeft': 'none',
     'borderRight': 'none',
@@ -116,8 +166,8 @@ BUTTON_STYLE = {
 }
 
 SIGNALS_STYLE = {
-    "margin-left": "-22rem",
-    "margin-top": "-2rem",
-    "padding": "0rem 0rem",
+    "margin-left": "20rem",
+    "margin-top": "42px",
+    "padding": "1.5rem 2rem",
     "background-color": COLORS_STYLE["background_color_2"]
 }

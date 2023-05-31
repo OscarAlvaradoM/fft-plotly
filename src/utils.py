@@ -6,7 +6,10 @@ import pandas as pd
 
 import plotly.graph_objects as go
 
-from styles import COLORS_STYLE, INITIAL_CONTENT_STYLE
+from scipy import signal
+
+from styles import COLORS_STYLE
+from components import initial_content_measure, initial_error_content_measure
 
 from dash import dcc, html
 
@@ -38,22 +41,12 @@ def get_empty_fig(type="datos_medidos"):
     return fig
 
 def initial_content_data():
-    fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
-    div = html.Div([
-        html.H5("Seleccione un archivo en el panel de la izquierda.", style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Graph(figure=fig1, id='grafica-medidos'),
-        dcc.Graph(figure=fig2, id='grafica-fourier'),
-    ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
+    div = html.Div(initial_content_measure)
 
     return div
 
 def error_content():
-    fig1, fig2 = get_empty_fig(), get_empty_fig("fourier")
-    div = html.Div([
-        html.H5(f'Hubo un error procesando este archivo, por favor asegúrate que es un archivo de tipo .csv o .xls', style={"color":COLORS_STYLE["text_color"]}),
-        dcc.Graph(figure=fig1, id='grafica-medidos'),
-        dcc.Graph(figure=fig2, id='grafica-fourier'),
-    ], id="output-data-upload", style=INITIAL_CONTENT_STYLE)
+    div = html.Div(initial_error_content_measure)
 
     return div
 
@@ -61,8 +54,8 @@ def get_fft(df):
     ffty = np.fft.fft(df.iloc[:,1])
 
     N = len(df)
-    f_sample = 1/(df.iloc[1,0] - df.iloc[0,0])
-    f_interval = f_sample / N
+    f_sample = int(1/(df.iloc[1,0] - df.iloc[0,0]))
+    f_interval = f_sample / (N-1)
     hertz = np.arange(N)*f_interval
     hertz = hertz - np.ceil(max(hertz)/2)
     specs = np.fft.fftshift(20*np.log10(ffty))
@@ -92,15 +85,28 @@ def get_dfs(content, filename):
     df_data = raw_file.iloc[14:,:]
     df_data = df_data.astype(float)
 
+    if len(df_data) % 2 == 0:
+        df_data = df_data.iloc[1:, :]
+
     df_fourier = get_fft(df_data)
 
     return df_data, df_fourier
 
 def get_axes(df, type="datos_medidos"):
     if type == "datos_medidos":
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]))
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], 
+                          name = "Medición", marker=dict(color = COLORS_STYLE["plot_color_1"]),
+                          hovertemplate =
+                                '<b>Tiempo: %{x:.5f} s</b>'+
+                                '<br>Amplitud: %{y:.2f} V<extra></extra>'
+                            )
     else:
-        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]))
+        axes = go.Scatter(x=df.iloc[:,0], y=df.iloc[:,1], 
+                          name = "Fourier", marker=dict(color = COLORS_STYLE["plot_color_2"]),
+                          hovertemplate =
+                                '<b>Frecuencia: %{x:.2f} Hz</b>'+
+                                '<br>Energía: %{y:.2f} dB<extra></extra>'
+                            )
 
     return axes
 
@@ -118,7 +124,7 @@ def parse_contents(content, filename):
     
     return df_datos_medidos, df_fourier, axes_1, axes_2
 
-def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
+def get_fig(axes, type="datos_medidos"):
     """
     Función que grafica tanto los datos medidos como la transformada de Fourier de dichos datos.
     """
@@ -133,10 +139,17 @@ def get_fig(axes, type="datos_medidos", df_datos_medidos=None):
         fig.update_xaxes(rangeslider_thickness = 0.1)
         fig.update_layout(xaxis=dict(
             rangeslider=dict(visible=True)
-            )
+            ),
+            xaxis_title="Tiempo [s]",
+            yaxis_title="Amplitud [V]"
         )
         h = 310
         top_margin = 20
+    else:
+        fig.update_layout(
+            xaxis_title="Frecuencia [Hz]",
+            yaxis_title="Energía [dB]"
+        )
     
     fig.update_layout(height=h, width=1100, 
                     #title_text=f"Frecuencia de muestreo: ---",
@@ -167,3 +180,45 @@ def get_frequency_resolution(df):
     frequency_resolution = f"{frequency_resolution:1.5} Hz"
 
     return frequency_resolution
+
+def get_spectrogram(df_signal):
+    if isinstance(df_signal, type(pd.DataFrame())):
+        # print(df_signal.iloc[:, -1].values)
+        # fig, ax = plt.subplots(figsize = (10,10))
+        # ax.specgram(df_signal.iloc[:, -1].values, Fs=6, cmap="rainbow")
+        # ax.set_title('Spectrogram Using matplotlib.pyplot.specgram() Method')
+        # ax.set_xlabel("DATA")
+        # ax.set_ylabel("TIME")
+
+        f, t, Sxx = signal.spectrogram(df_signal.iloc[:,-1].values, 1/(df_signal.iloc[1,0] - df_signal.iloc[0,0]))
+
+        trace1 = {
+        "type": "heatmap", 
+        "x": t,
+        "y": f,
+        "z": Sxx,
+        "colorscale": "Jet"}
+
+        data = go.Heatmap(z=trace1["z"], x=trace1["x"], y=trace1["y"], colorscale=trace1["colorscale"])
+        layout = {
+        "title": {"text": "Espectrograma de los datos medidos."}, 
+        "xaxis": {"title": {"text": "Tiempo"}}, 
+        "yaxis": {"title": {"text": "Frecuencia"}},
+        "width": 650,
+        "height": 650,
+        }
+        fig = go.Figure(data=data, layout=layout)
+
+        # fig = go.Figure(data=go.Heatmap(
+        #             z=[[1, 20, 30],
+        #               [20, 1, 60],
+        #               [30, 60, 1]],
+        #             text=[['one', 'twenty', 'thirty'],
+        #                   ['twenty', 'one', 'sixty'],
+        #                   ['thirty', 'sixty', 'one']],
+        #             texttemplate="%{text}",
+        #             textfont={"size":20}))
+
+        return fig
+    else:
+        return None
